@@ -1,0 +1,8 @@
+-------------------------------------------------------------------------------
+Test set: com.parkit.parkingsystem.dao.TicketDAOTest
+-------------------------------------------------------------------------------
+Tests run: 16, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 0.125 s <<< FAILURE! - in com.parkit.parkingsystem.dao.TicketDAOTest
+testGetLatestTicket  Time elapsed: 0 s  <<< ERROR!
+java.lang.NullPointerException: Cannot invoke "java.sql.Connection.prepareStatement(String)" because "con" is null
+	at com.parkit.parkingsystem.dao.TicketDAOTest.testGetLatestTicket(TicketDAOTest.java:229)
+

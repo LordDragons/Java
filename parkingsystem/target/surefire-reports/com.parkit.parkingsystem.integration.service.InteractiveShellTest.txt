@@ -1,0 +1,16 @@
+-------------------------------------------------------------------------------
+Test set: com.parkit.parkingsystem.integration.service.InteractiveShellTest
+-------------------------------------------------------------------------------
+Tests run: 4, Failures: 0, Errors: 4, Skipped: 0, Time elapsed: 0 s <<< FAILURE! - in com.parkit.parkingsystem.integration.service.InteractiveShellTest
+testLoadInterfaceUnsupportedOption  Time elapsed: 0 s  <<< ERROR!
+org.junit.jupiter.api.extension.ParameterResolutionException: No ParameterResolver registered for parameter [com.parkit.parkingsystem.dao.ParkingSpotDAO arg0] in constructor [com.parkit.parkingsystem.integration.service.InteractiveShellTest(com.parkit.parkingsystem.dao.ParkingSpotDAO,com.parkit.parkingsystem.dao.TicketDAO)].
+
+testLoadInterfaceExitOption  Time elapsed: 0 s  <<< ERROR!
+org.junit.jupiter.api.extension.ParameterResolutionException: No ParameterResolver registered for parameter [com.parkit.parkingsystem.dao.ParkingSpotDAO arg0] in constructor [com.parkit.parkingsystem.integration.service.InteractiveShellTest(com.parkit.parkingsystem.dao.ParkingSpotDAO,com.parkit.parkingsystem.dao.TicketDAO)].
+
+testLoadInterfaceNewVehicle  Time elapsed: 0 s  <<< ERROR!
+org.junit.jupiter.api.extension.ParameterResolutionException: No ParameterResolver registered for parameter [com.parkit.parkingsystem.dao.ParkingSpotDAO arg0] in constructor [com.parkit.parkingsystem.integration.service.InteractiveShellTest(com.parkit.parkingsystem.dao.ParkingSpotDAO,com.parkit.parkingsystem.dao.TicketDAO)].
+
+testLoadInterfaceExitingVehicle  Time elapsed: 0 s  <<< ERROR!
+org.junit.jupiter.api.extension.ParameterResolutionException: No ParameterResolver registered for parameter [com.parkit.parkingsystem.dao.ParkingSpotDAO arg0] in constructor [com.parkit.parkingsystem.integration.service.InteractiveShellTest(com.parkit.parkingsystem.dao.ParkingSpotDAO,com.parkit.parkingsystem.dao.TicketDAO)].
+

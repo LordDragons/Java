@@ -1,0 +1,26 @@
+-------------------------------------------------------------------------------
+Test set: com.parkit.parkingsystem.ParkingServiceTest
+-------------------------------------------------------------------------------
+Tests run: 9, Failures: 1, Errors: 1, Skipped: 0, Time elapsed: 0.016 s <<< FAILURE! - in com.parkit.parkingsystem.ParkingServiceTest
+processIncomingVehicle_ExceptionOnVehicleRegNumber_ShouldLogError  Time elapsed: 0 s  <<< FAILURE!
+org.mockito.exceptions.verification.NeverWantedButInvoked: 
+
+parkingSpotDAO.updateParking(
+    <any com.parkit.parkingsystem.model.ParkingSpot>
+);
+Never wanted here:
+-> at com.parkit.parkingsystem.ParkingServiceTest.processIncomingVehicle_ExceptionOnVehicleRegNumber_ShouldLogError(ParkingServiceTest.java:99)
+But invoked here:
+-> at com.parkit.parkingsystem.service.ParkingService.processIncomingVehicle(ParkingService.java:41)
+
+	at com.parkit.parkingsystem.ParkingServiceTest.processIncomingVehicle_ExceptionOnVehicleRegNumber_ShouldLogError(ParkingServiceTest.java:99)
+
+processExitingVehicle_UpdateTicketFailed_ShouldLogError  Time elapsed: 0 s  <<< ERROR!
+org.mockito.exceptions.misusing.UnnecessaryStubbingException: 
+
+Unnecessary stubbings detected.
+Clean & maintainable test code requires zero unnecessary code.
+Following stubbings are unnecessary (click to navigate to relevant line of code):
+  1. -> at com.parkit.parkingsystem.ParkingServiceTest.processExitingVehicle_UpdateTicketFailed_ShouldLogError(ParkingServiceTest.java:124)
+Please remove unnecessary stubbings or use 'lenient' strictness. More info: javadoc for UnnecessaryStubbingException class.
+

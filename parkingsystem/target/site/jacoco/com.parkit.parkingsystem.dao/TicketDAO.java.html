@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="fr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TicketDAO.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">parking-system</a> &gt; <a href="index.source.html" class="el_package">com.parkit.parkingsystem.dao</a> &gt; <span class="el_source">TicketDAO.java</span></div><h1>TicketDAO.java</h1><pre class="source lang-java linenums">package com.parkit.parkingsystem.dao;
+
+
+import com.parkit.parkingsystem.config.DataBaseConfig;
+import com.parkit.parkingsystem.constants.DBConstants;
+import com.parkit.parkingsystem.constants.ParkingType;
+import com.parkit.parkingsystem.model.ParkingSpot;
+import com.parkit.parkingsystem.model.Ticket;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.sql.*;
+
+public class TicketDAO {
+
+<span class="fc" id="L16">    private static final Logger logger = LogManager.getLogger(&quot;TicketDAO&quot;);</span>
+
+<span class="fc" id="L18">    public DataBaseConfig dataBaseConfig = new DataBaseConfig();</span>
+    private String expectedLicensePlate;
+
+<span class="fc" id="L21">    public TicketDAO() {</span>
+<span class="fc" id="L22">    }</span>
+
+    public boolean saveTicket(Ticket ticket) {
+<span class="fc" id="L25">        Connection con = null;</span>
+<span class="fc" id="L26">        PreparedStatement ps = null;</span>
+<span class="fc" id="L27">        boolean isSaved = false;</span>
+
+        try {
+<span class="pc bpc" id="L30" title="3 of 8 branches missed.">            if (ticket == null || ticket.getVehicleRegNumber() == null || ticket.getPrice() &lt;= 0 || ticket.getInTime() == null) {</span>
+<span class="fc" id="L31">                logger.error(&quot;Invalid ticket object: {}&quot;, ticket);</span>
+<span class="fc" id="L32">                return false;</span>
+            }
+
+<span class="fc" id="L35">            con = dataBaseConfig.getConnection();</span>
+<span class="pc bpc" id="L36" title="1 of 2 branches missed.">            if (con == null) {</span>
+<span class="nc" id="L37">                logger.error(&quot;Failed to get a database connection&quot;);</span>
+<span class="nc" id="L38">                return false;</span>
+            }
+
+            // Désactive l'auto-commit pour gérer la transaction manuellement
+<span class="fc" id="L42">            con.setAutoCommit(false);</span>
+
+            // Logging SQL execution details
+<span class="fc" id="L45">            logger.info(&quot;Executing SQL query: {}&quot;, DBConstants.SAVE_TICKET);</span>
+<span class="fc" id="L46">            logger.info(&quot;With parameters: Parking Spot ID = {}, Vehicle Reg Number = {}, Price = {}, In Time = {}, Out Time = {}&quot;,</span>
+<span class="fc" id="L47">                    ticket.getParkingSpot().getId(), ticket.getVehicleRegNumber(), ticket.getPrice(), ticket.getInTime(), ticket.getOutTime());</span>
+
+<span class="fc" id="L49">            ps = con.prepareStatement(DBConstants.SAVE_TICKET);</span>
+<span class="fc" id="L50">            ps.setInt(1, ticket.getParkingSpot().getId());</span>
+<span class="fc" id="L51">            ps.setString(2, ticket.getVehicleRegNumber());</span>
+<span class="fc" id="L52">            ps.setDouble(3, ticket.getPrice());</span>
+<span class="fc" id="L53">            ps.setTimestamp(4, new Timestamp(ticket.getInTime().getTime()));</span>
+<span class="pc bpc" id="L54" title="1 of 2 branches missed.">            ps.setTimestamp(5, (ticket.getOutTime() == null) ? null : new Timestamp(ticket.getOutTime().getTime()));</span>
+
+<span class="fc" id="L56">            int rowsAffected = ps.executeUpdate();</span>
+<span class="fc" id="L57">            logger.info(&quot;Rows affected by ticket save: {}&quot;, rowsAffected); // Debug log</span>
+
+<span class="pc bpc" id="L59" title="1 of 2 branches missed.">            if (rowsAffected != 1) {</span>
+<span class="nc" id="L60">                logger.warn(&quot;Ticket save failed. Rows affected: {}&quot;, rowsAffected);</span>
+<span class="nc" id="L61">                con.rollback();  // Annule la transaction en cas d'échec</span>
+            } else {
+<span class="fc" id="L63">                isSaved = true;</span>
+<span class="fc" id="L64">                logger.info(&quot;Ticket saved successfully.&quot;);</span>
+<span class="fc" id="L65">                con.commit();  // Confirme la transaction</span>
+            }
+<span class="fc" id="L67">        } catch (SQLIntegrityConstraintViolationException ex) {</span>
+<span class="fc" id="L68">            logger.error(&quot;Integrity constraint violation: {}&quot;, ex.getMessage(), ex);</span>
+            try {
+<span class="pc bpc" id="L70" title="1 of 2 branches missed.">                if (con != null) con.rollback();  // Annule la transaction en cas de violation de contrainte</span>
+<span class="nc" id="L71">            } catch (SQLException e) {</span>
+<span class="nc" id="L72">                logger.error(&quot;Error during rollback&quot;, e);</span>
+<span class="fc" id="L73">            }</span>
+<span class="nc" id="L74">        } catch (SQLException ex) {</span>
+<span class="nc" id="L75">            logger.error(&quot;Error saving ticket: {}&quot;, ticket, ex);</span>
+            try {
+<span class="nc bnc" id="L77" title="All 2 branches missed.">                if (con != null) con.rollback();  // Annule la transaction en cas d'erreur SQL</span>
+<span class="nc" id="L78">            } catch (SQLException e) {</span>
+<span class="nc" id="L79">                logger.error(&quot;Error during rollback&quot;, e);</span>
+<span class="nc" id="L80">            }</span>
+<span class="nc" id="L81">        } catch (ClassNotFoundException e) {</span>
+<span class="nc" id="L82">            throw new RuntimeException(e);</span>
+        } finally {
+            try {
+<span class="fc bfc" id="L85" title="All 2 branches covered.">                if (con != null) con.setAutoCommit(true);  // Réactive l'auto-commit après la transaction</span>
+<span class="nc" id="L86">            } catch (SQLException e) {</span>
+<span class="nc" id="L87">                logger.error(&quot;Error resetting auto-commit&quot;, e);</span>
+<span class="fc" id="L88">            }</span>
+<span class="fc" id="L89">            dataBaseConfig.closePreparedStatement(ps);</span>
+<span class="fc" id="L90">            dataBaseConfig.closeConnection(con);</span>
+        }
+
+<span class="fc" id="L93">        return isSaved;</span>
+    }
+
+
+
+    public Ticket getTicket(String vehicleRegNumber) {
+<span class="fc" id="L99">        Ticket ticket = null;</span>
+
+<span class="fc bfc" id="L101" title="All 4 branches covered.">        if (vehicleRegNumber == null || vehicleRegNumber.isEmpty()) {</span>
+<span class="fc" id="L102">            logger.error(&quot;Invalid vehicle registration number: {}&quot;, vehicleRegNumber);</span>
+<span class="fc" id="L103">            return null;</span>
+        }
+
+<span class="fc" id="L106">        try (Connection con = dataBaseConfig.getConnection();</span>
+<span class="fc" id="L107">             PreparedStatement ps = con.prepareStatement(DBConstants.GET_TICKET)) {</span>
+
+<span class="fc" id="L109">            ps.setString(1, vehicleRegNumber);</span>
+
+<span class="fc" id="L111">            try (ResultSet rs = ps.executeQuery()) {</span>
+<span class="fc bfc" id="L112" title="All 2 branches covered.">                if (rs.next()) {</span>
+<span class="fc" id="L113">                    ticket = new Ticket();</span>
+
+<span class="fc" id="L115">                    String parkingTypeStr = rs.getString(&quot;TYPE&quot;);</span>
+<span class="fc" id="L116">                    ParkingSpot parkingSpot = null;</span>
+                    try {
+<span class="pc bpc" id="L118" title="1 of 2 branches missed.">                        if (parkingTypeStr != null) {</span>
+<span class="fc" id="L119">                            parkingSpot = new ParkingSpot(rs.getInt(&quot;PARKING_NUMBER&quot;),</span>
+<span class="fc" id="L120">                                    ParkingType.valueOf(parkingTypeStr), false);</span>
+                        }
+<span class="fc" id="L122">                    } catch (IllegalArgumentException ex) {</span>
+<span class="fc" id="L123">                        logger.error(&quot;Invalid parking type: {} for vehicle: {}&quot;, parkingTypeStr, vehicleRegNumber);</span>
+<span class="fc" id="L124">                    }</span>
+
+<span class="fc" id="L126">                    ticket.setParkingSpot(parkingSpot);</span>
+<span class="fc" id="L127">                    ticket.setId(rs.getInt(&quot;ID&quot;));</span>
+<span class="fc" id="L128">                    ticket.setVehicleRegNumber(vehicleRegNumber);</span>
+<span class="fc" id="L129">                    ticket.setPrice(rs.getDouble(&quot;PRICE&quot;));</span>
+<span class="fc" id="L130">                    ticket.setInTime(rs.getTimestamp(&quot;IN_TIME&quot;));</span>
+<span class="fc" id="L131">                    ticket.setOutTime(rs.getTimestamp(&quot;OUT_TIME&quot;));</span>
+
+<span class="fc" id="L133">                    logger.info(&quot;Ticket retrieved successfully for vehicle: {}&quot;, vehicleRegNumber);</span>
+<span class="fc" id="L134">                } else {</span>
+<span class="fc" id="L135">                    logger.info(&quot;No ticket found for vehicle registration number: {}&quot;, vehicleRegNumber);</span>
+                }
+            }
+<span class="fc" id="L138">        } catch (SQLException ex) {</span>
+<span class="fc" id="L139">            logger.error(&quot;SQL error fetching ticket for vehicle: {} &quot;, vehicleRegNumber, ex);</span>
+<span class="nc" id="L140">        } catch (ClassNotFoundException e) {</span>
+<span class="nc" id="L141">            throw new RuntimeException(e);</span>
+<span class="fc" id="L142">        }</span>
+
+<span class="fc" id="L144">        return ticket;</span>
+    }
+
+    public boolean updateTicket(Ticket ticket) {
+<span class="fc" id="L148">        Connection con = null;</span>
+        try {
+<span class="fc" id="L150">            con = dataBaseConfig.getConnection();</span>
+<span class="fc" id="L151">            PreparedStatement ps = con.prepareStatement(DBConstants.UPDATE_TICKET);</span>
+<span class="fc" id="L152">            ps.setDouble(1, ticket.getPrice());</span>
+<span class="fc" id="L153">            ps.setTimestamp(2, new Timestamp(ticket.getOutTime().getTime()));</span>
+<span class="fc" id="L154">            ps.setInt(3, ticket.getId());</span>
+<span class="fc" id="L155">            ps.execute();</span>
+<span class="fc" id="L156">            return true;</span>
+<span class="fc" id="L157">        } catch (Exception ex) {</span>
+<span class="fc" id="L158">            logger.error(&quot;Error saving ticket info&quot;, ex);</span>
+        } finally {
+<span class="fc" id="L160">            dataBaseConfig.closeConnection(con);</span>
+        }
+<span class="fc" id="L162">        return false;</span>
+    }
+
+    public boolean getReduce(String vehicleRegNumber) {
+<span class="fc" id="L166">        Connection con = null;</span>
+<span class="fc" id="L167">        PreparedStatement ps = null;</span>
+<span class="fc" id="L168">        ResultSet rs = null;</span>
+<span class="fc" id="L169">        boolean isHere = false;</span>
+
+        try {
+<span class="fc" id="L172">            con = dataBaseConfig.getConnection();</span>
+<span class="fc" id="L173">            ps = con.prepareStatement(DBConstants.GET_REDUCE);</span>
+<span class="fc" id="L174">            ps.setString(1, vehicleRegNumber);</span>
+<span class="fc" id="L175">            rs = ps.executeQuery();</span>
+
+<span class="fc bfc" id="L177" title="All 2 branches covered.">            if (rs.next()) {</span>
+<span class="fc bfc" id="L178" title="All 2 branches covered.">                return rs.getInt(1) &gt; 0;</span>
+            }
+<span class="nc" id="L180">        } catch (SQLException | ClassNotFoundException e) {</span>
+<span class="nc" id="L181">            logger.error(&quot;An error occurred while checking for reduction: &quot;, e);</span>
+        } finally {
+<span class="pc bpc" id="L183" title="1 of 2 branches missed.">            if (rs != null) try { rs.close(); } catch (Exception ignored) {}</span>
+<span class="pc bpc" id="L184" title="1 of 2 branches missed.">            if (ps != null) try { ps.close(); } catch (Exception ignored) {}</span>
+<span class="pc bpc" id="L185" title="1 of 2 branches missed.">            if (con != null) try { con.close(); } catch (Exception ignored) {}</span>
+        }
+<span class="fc" id="L187">        return isHere;</span>
+    }
+
+    public void setDataBaseConfig(DataBaseConfig dataBaseConfig) {
+<span class="fc" id="L191">        this.dataBaseConfig = dataBaseConfig;</span>
+<span class="fc" id="L192">    }</span>
+
+    public Ticket getLatestTicket() {
+<span class="fc" id="L195">        Ticket ticket = null;</span>
+<span class="fc" id="L196">        try (Connection con = dataBaseConfig.getConnection();</span>
+<span class="nc" id="L197">             PreparedStatement ps = con.prepareStatement(&quot;SELECT * FROM ticket ORDER BY ID DESC LIMIT 1&quot;)) {</span>
+
+<span class="nc" id="L199">            try (ResultSet rs = ps.executeQuery()) {</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">                if (rs.next()) {</span>
+<span class="nc" id="L201">                    ticket = new Ticket();</span>
+<span class="nc" id="L202">                    ticket.setId(rs.getInt(&quot;ID&quot;));</span>
+<span class="nc" id="L203">                    ticket.setParkingSpot(new ParkingSpot(rs.getInt(&quot;PARKING_NUMBER&quot;), ParkingType.valueOf(rs.getString(&quot;TYPE&quot;)), false));</span>
+<span class="nc" id="L204">                    ticket.setVehicleRegNumber(rs.getString(&quot;VEHICLE_REG_NUMBER&quot;));</span>
+<span class="nc" id="L205">                    ticket.setPrice(rs.getDouble(&quot;PRICE&quot;));</span>
+<span class="nc" id="L206">                    ticket.setInTime(rs.getTimestamp(&quot;IN_TIME&quot;));</span>
+<span class="nc" id="L207">                    ticket.setOutTime(rs.getTimestamp(&quot;OUT_TIME&quot;));</span>
+                }
+            }
+<span class="nc" id="L210">        } catch (SQLException | ClassNotFoundException ex) {</span>
+<span class="nc" id="L211">            logger.error(&quot;SQL error while fetching the latest ticket&quot;, ex);</span>
+<span class="nc" id="L212">        }</span>
+
+<span class="nc" id="L214">        return ticket;</span>
+    }
+
+
+    public Ticket getTicketByLicensePlate(String expectedLicensePlate) {
+<span class="fc" id="L219">        this.expectedLicensePlate = expectedLicensePlate;</span>
+<span class="fc" id="L220">        return null;</span>
+    }
+
+    public String getExpectedLicensePlate() {
+<span class="nc" id="L224">        return expectedLicensePlate;</span>
+    }
+
+    public void setExpectedLicensePlate(String expectedLicensePlate) {
+<span class="nc" id="L228">        this.expectedLicensePlate = expectedLicensePlate;</span>
+<span class="nc" id="L229">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>
