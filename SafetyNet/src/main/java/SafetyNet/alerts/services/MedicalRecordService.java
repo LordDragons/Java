@@ -32,5 +32,31 @@ public class MedicalRecordService {
     public MedicalRecord getMedicalRecordForPerson(Person person) {
         return medicalRecordCache.get(person.getFirstName() + " " + person.getLastName());
     }
+
+    // Ajouter un dossier médical
+    public MedicalRecord addMedicalRecord(MedicalRecord medicalRecord) {
+        data.getMedicalrecords().add(medicalRecord);
+        return medicalRecord;
+    }
+
+    // Mettre à jour un dossier médical existant
+    public MedicalRecord updateMedicalRecord(MedicalRecord medicalRecord) {
+        return data.getMedicalrecords().stream()
+                .filter(record -> record.getFirstName().equalsIgnoreCase(medicalRecord.getFirstName()) &&
+                        record.getLastName().equalsIgnoreCase(medicalRecord.getLastName()))
+                .findFirst()
+                .map(existingRecord -> {
+                    existingRecord.setBirthDate(medicalRecord.getBirthDate());
+                    existingRecord.setMedications(medicalRecord.getMedications());
+                    existingRecord.setAllergies(medicalRecord.getAllergies());
+                    return existingRecord;
+                }).orElse(null);
+    }
+
+    // Supprimer un dossier médical
+    public boolean deleteMedicalRecord(String firstName, String lastName) {
+        return data.getMedicalrecords().removeIf(record -> record.getFirstName().equalsIgnoreCase(firstName) &&
+                record.getLastName().equalsIgnoreCase(lastName));
+    }
 }
 

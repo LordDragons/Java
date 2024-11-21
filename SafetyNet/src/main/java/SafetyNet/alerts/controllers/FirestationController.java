@@ -1,24 +1,19 @@
 package SafetyNet.alerts.controllers;
 
-import SafetyNet.alerts.dto.AgeCalculatorDTO;
+
 import SafetyNet.alerts.dto.FirestationDTO;
 import SafetyNet.alerts.dto.HouseDTO;
 import SafetyNet.alerts.models.Data;
 import SafetyNet.alerts.models.Firestation;
-import SafetyNet.alerts.models.MedicalRecord;
-import SafetyNet.alerts.models.Person;
 import SafetyNet.alerts.services.FirestationService;
 import SafetyNet.alerts.services.MedicalRecordService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
-import static SafetyNet.alerts.dto.AgeCalculatorDTO.calculateAge;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/phoneAlert")
@@ -79,6 +74,31 @@ public class FirestationController {
     }
 
 
+    @PostMapping
+    public ResponseEntity<Firestation> addFirestation(@RequestBody Firestation firestation) {
+        Firestation createdFirestation = firestationService.addFirestation(firestation);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdFirestation);
+    }
+
+    // Mettre à jour le numéro de la caserne pour une adresse donnée
+    @PutMapping
+    public ResponseEntity<Firestation> updateFirestation(@RequestParam String address, @RequestParam Integer newStation) {
+        Firestation updatedFirestation = firestationService.updateFirestation(address, newStation);
+        if (updatedFirestation == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(updatedFirestation);
+    }
+
+    // Supprimer un mapping caserne/adresse
+    @DeleteMapping
+    public ResponseEntity<Void> deleteFirestation(@RequestParam String address) {
+        boolean deleted = firestationService.deleteFirestation(address);
+        if (!deleted) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.noContent().build();
+    }
 
 }
 

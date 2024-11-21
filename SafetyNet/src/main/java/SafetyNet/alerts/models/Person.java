@@ -4,6 +4,7 @@ import SafetyNet.alerts.dto.AgeCalculatorDTO;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+
 public class Person {
 
     private String firstName;

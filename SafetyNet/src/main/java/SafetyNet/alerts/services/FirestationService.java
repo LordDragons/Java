@@ -180,4 +180,28 @@ public class FirestationService {
     private int calculateAge(LocalDate birthDate) {
         return Period.between(birthDate, LocalDate.now()).getYears();
     }
+
+    // Ajouter un nouveau mapping caserne/adresse
+    public Firestation addFirestation(Firestation firestation) {
+        data.getFirestations().add(firestation);
+        return firestation;
+    }
+
+
+    // Mettre à jour le numéro de la caserne pour une adresse donnée
+    public Firestation updateFirestation(String address, Integer newStation) {
+        return data.getFirestations().stream()
+                .filter(fs -> fs.getAddress().equalsIgnoreCase(address))
+                .findFirst()
+                .map(existingFirestation -> {
+                    existingFirestation.setStation(newStation);
+                    return existingFirestation;
+                }).orElse(null);
+    }
+
+    // Supprimer un mapping caserne/adresse
+    public boolean deleteFirestation(String address) {
+        return data.getFirestations().removeIf(fs -> fs.getAddress().equalsIgnoreCase(address));
+    }
+
 }

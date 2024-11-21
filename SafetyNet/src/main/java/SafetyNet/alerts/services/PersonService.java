@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 
@@ -133,6 +134,41 @@ public class PersonService {
         return List.of(personInfoDTO);
     }
 
+    public Person addPerson(Person person) {
+        data.getPersons().add(person);
+        return person;
+    }
+
+
+    public Optional<Person> updatePerson(Person person) {
+        return data.getPersons().stream()
+                .filter(p -> p.getFirstName().equalsIgnoreCase(person.getFirstName()) &&
+                        p.getLastName().equalsIgnoreCase(person.getLastName()))
+                .findFirst()
+                .map(existingPerson -> {
+                    existingPerson.setAddress(person.getAddress());
+                    existingPerson.setCity(person.getCity());
+                    existingPerson.setZip(person.getZip());
+                    existingPerson.setPhone(person.getPhone());
+                    existingPerson.setEmail(person.getEmail());
+                    System.out.println("Updated person: " + existingPerson);
+                    return existingPerson;
+                });
+    }
+
+
+    public boolean deletePerson(String firstName, String lastName) {
+        boolean isDeleted = data.getPersons().removeIf(p ->
+                p.getFirstName().equalsIgnoreCase(firstName) &&
+                        p.getLastName().equalsIgnoreCase(lastName));
+
+        if (isDeleted) {
+            System.out.println("Person deleted: " + firstName + " " + lastName);
+        } else {
+            System.out.println("Person not found: " + firstName + " " + lastName);
+        }
+        return isDeleted;
+    }
 
 
 }
