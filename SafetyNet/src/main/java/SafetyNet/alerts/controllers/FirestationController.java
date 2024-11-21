@@ -82,8 +82,8 @@ public class FirestationController {
 
     // Mettre à jour le numéro de la caserne pour une adresse donnée
     @PutMapping
-    public ResponseEntity<Firestation> updateFirestation(@RequestParam String address, @RequestParam Integer newStation) {
-        Firestation updatedFirestation = firestationService.updateFirestation(address, newStation);
+    public ResponseEntity<Firestation> updateFirestation(@RequestParam String address, @RequestParam Integer station) {
+        Firestation updatedFirestation = firestationService.updateFirestation(address, station);
         if (updatedFirestation == null) {
             return ResponseEntity.notFound().build();
         }
