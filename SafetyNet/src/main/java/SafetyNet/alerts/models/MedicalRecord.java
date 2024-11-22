@@ -31,6 +31,9 @@ public class MedicalRecord {
         this.allergies = allergies;
     }
 
+    public MedicalRecord(String john, String doe, String s) {
+    }
+
     public String getFirstName() {
         return firstName;
     }

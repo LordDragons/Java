@@ -1,20 +1,25 @@
 package SafetyNet.alerts.services;
 
-import SafetyNet.alerts.dto.AgeCalculatorDTO;
+
 import SafetyNet.alerts.dto.ChildAlertDTO;
 import SafetyNet.alerts.dto.PersonInfoDTO;
 import SafetyNet.alerts.models.Data;
 import SafetyNet.alerts.models.MedicalRecord;
 import SafetyNet.alerts.models.Person;
+import SafetyNet.alerts.repositorys.MedicalRecordRepositoryImpl;
 import SafetyNet.alerts.repositorys.PersonRepositoryImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.Period;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
+
 
 
 @Service
@@ -23,21 +28,24 @@ public class PersonService {
     private final Data data;
     private final MedicalRecordService medicalRecordService;  // Injection de dépendance
     private final PersonRepositoryImpl personRepositoryImpl;
+    private final MedicalRecordRepositoryImpl medicalRecordRepositoryImpl;
+
+
 
 
     // Constructeur avec injection de MedicalRecordService
     @Autowired
-    public PersonService(Data data, MedicalRecordService medicalRecordService, PersonRepositoryImpl personRepositoryImpl) {
+    public PersonService(Data data, MedicalRecordService medicalRecordService, PersonRepositoryImpl personRepositoryImpl,MedicalRecordRepositoryImpl medicalRecordRepositoryImpl)
+    {
         this.data = data;
         this.medicalRecordService = medicalRecordService;  // Assignation de la dépendance
         this.personRepositoryImpl = personRepositoryImpl;
+        this.medicalRecordRepositoryImpl = medicalRecordRepositoryImpl;
     }
 
     // Méthode pour récupérer la liste des emails
     public List<String> getEmailsList() {
-        return data.getPersons().stream()
-                .map(Person::getEmail)
-                .collect(Collectors.toList());
+        return personRepositoryImpl.getAllEmails();
     }
 
     // Méthode pour récupérer les enfants d'une adresse
@@ -64,7 +72,7 @@ public class PersonService {
 
                 // Vérifie si la personne est un enfant (âge <= 18)
                 String birthDateString = medicalRecord.getBirthDate();
-                int age = AgeCalculatorDTO.calculateAge(birthDateString);
+                int age = calculateAge(birthDateString);
                 if (age <= 18) {
                     // Si c'est un enfant, on crée un ChildAlertDTO
                     List<String> householdMembers = new ArrayList<>();
@@ -84,9 +92,6 @@ public class PersonService {
 
         return children;
     }
-
-
-
 
 
     // Méthode pour récupérer les informations d'une personne
@@ -112,7 +117,7 @@ public class PersonService {
 
         // Récupération de la date de naissance et calcul de l'âge
         String birthDateString = medicalRecord.getBirthDate();
-        int age = AgeCalculatorDTO.calculateAge(birthDateString);
+        int age = calculateAge(birthDateString);
         // Création du DTO avec les informations de la personne et ses informations médicales
         PersonInfoDTO personInfoDTO = new PersonInfoDTO();
         personInfoDTO.setFirstName(person.getFirstName());
@@ -170,7 +175,25 @@ public class PersonService {
         return isDeleted;
     }
 
+    public static int calculateAge(String birthDateString) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
+        try {
+            LocalDate birthDate = LocalDate.parse(birthDateString, formatter);
 
+            if (birthDate.isAfter(LocalDate.now())) {
+                System.err.println("La date de naissance ne peut pas être dans le futur : " + birthDateString);
+                return 0; // Returning 0 or some default value
+            }
+
+            LocalDate currentDate = LocalDate.now();
+            return Period.between(birthDate, currentDate).getYears();
+        } catch (DateTimeParseException e) {
+            System.err.println("Format de date invalide : " + birthDateString);
+            return 0; // Handle parsing error by returning 0
+        }
+
+
+}
 }
     //        return data.getPersons().stream()
 //                .filter(person -> person.getFirstName().equalsIgnoreCase(firstName)

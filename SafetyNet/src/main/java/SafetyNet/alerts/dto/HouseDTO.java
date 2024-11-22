@@ -12,6 +12,10 @@ public class HouseDTO {
         this.residents = residents;
     }
 
+    public HouseDTO() {
+
+    }
+
     // Getters and Setters
     public String getAddress() {
         return address;

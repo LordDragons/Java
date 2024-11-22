@@ -1,6 +1,7 @@
 package SafetyNet.alerts.dto;
 
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class FirestationDTO {
@@ -8,7 +9,8 @@ public class FirestationDTO {
     private Integer station;
     private Long numberOfAdults;
     private Long numberOfChildren;
-    private List<ResidentInfo> residents;
+    private List<ResidentInfo> residents = new ArrayList<>();
+
 
     public FirestationDTO(String address, Integer station, Long numberOfAdults, Long numberOfChildren, List<ResidentInfo> residents) {
         this.address = address;
@@ -16,6 +18,10 @@ public class FirestationDTO {
         this.numberOfAdults = numberOfAdults;
         this.numberOfChildren = numberOfChildren;
         this.residents = residents;
+    }
+
+    public FirestationDTO() {
+
     }
 
     public String getAddress() {

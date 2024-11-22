@@ -46,4 +46,11 @@ public class PersonRepositoryImpl implements PersonRepository {
                 .filter(person -> addresses.contains(person.getAddress()))
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public List<String> getAllEmails() {
+        return data.getPersons().stream()
+                .map(Person::getEmail)
+                .collect(Collectors.toList());
+    }
 }

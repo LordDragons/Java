@@ -1,6 +1,6 @@
 package SafetyNet.alerts.services;
 
-import SafetyNet.alerts.dto.AgeCalculatorDTO;
+
 import SafetyNet.alerts.dto.FirestationDTO;
 import SafetyNet.alerts.dto.HouseDTO;
 import SafetyNet.alerts.models.Data;
@@ -60,7 +60,7 @@ public class FirestationService {
         return new HouseDTO(address, residents);
     }
 
-    private HouseDTO.Resident createResidentFromPerson(Person person) {
+    public HouseDTO.Resident createResidentFromPerson(Person person) {
         MedicalRecord medicalRecord = data.getMedicalrecords().stream()
                 .filter(m -> m.getFirstName().equalsIgnoreCase(person.getFirstName()))
                 .filter(m -> m.getLastName().equalsIgnoreCase(person.getLastName()))
@@ -77,13 +77,13 @@ public class FirestationService {
                 person.getFirstName(),
                 person.getLastName(),
                 person.getPhone(),
-                AgeCalculatorDTO.calculateAge(medicalRecord.getBirthDate()),
+                PersonService.calculateAge(medicalRecord.getBirthDate()),
                 medicalRecord.getMedications(),
                 medicalRecord.getAllergies()
         );
     }
 
-    private void logMissingMedicalRecord(Person person) {
+    public void logMissingMedicalRecord(Person person) {
         System.err.println("Aucun MedicalRecord trouvé pour la personne : "
                 + person.getFirstName() + " " + person.getLastName());
     }
@@ -114,7 +114,7 @@ public class FirestationService {
 
                 if (medicalRecord != null) {
 
-                    int age = AgeCalculatorDTO.calculateAge(medicalRecord.getBirthDate());
+                    int age = PersonService.calculateAge(medicalRecord.getBirthDate());
 
                     if (age <= 18) {
                         numberOfChildren++;
@@ -177,7 +177,7 @@ public class FirestationService {
                 continue;
             }
 
-            int age = AgeCalculatorDTO.calculateAge(medicalRecord.getBirthDate());
+            int age = PersonService.calculateAge(medicalRecord.getBirthDate());
             if (age <= 18) {
                 numberOfChildren++;
             } else {

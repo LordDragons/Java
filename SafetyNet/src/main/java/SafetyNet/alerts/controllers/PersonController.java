@@ -41,7 +41,6 @@ public class PersonController {
             return ResponseEntity.ok(Collections.emptyList());
         }
 
-        // Sinon, retourner les enfants avec un code 200
         return ResponseEntity.ok(children);
     }
 

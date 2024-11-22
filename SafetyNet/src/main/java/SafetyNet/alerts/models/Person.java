@@ -1,6 +1,7 @@
 package SafetyNet.alerts.models;
 
-import SafetyNet.alerts.dto.AgeCalculatorDTO;
+
+import SafetyNet.alerts.services.PersonService;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -109,7 +110,7 @@ public class Person {
         if (medicalRecord == null || medicalRecord.getBirthDate() == null) {
             throw new IllegalStateException("Le dossier médical ou la date de naissance est manquant");
         }
-        return AgeCalculatorDTO.calculateAge(medicalRecord.getBirthDate());
+        return PersonService.calculateAge(medicalRecord.getBirthDate());
     }
 
     @Override

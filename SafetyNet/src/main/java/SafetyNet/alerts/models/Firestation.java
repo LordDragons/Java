@@ -15,6 +15,10 @@ public class Firestation {
         this.station = station;
     }
 
+    public Firestation() {
+
+    }
+
     public String getAddress() {
         return address;
     }
