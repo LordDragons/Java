@@ -54,6 +54,7 @@ public class FirestationController {
     public ResponseEntity<FirestationDTO> getFireDetails(@RequestParam String address) {
         System.out.println("Adresse reçue dans la requête : " + address);
 
+
         FirestationDTO firestationDTO = firestationService.getFireDetails(address);
 
         if (firestationDTO == null) {

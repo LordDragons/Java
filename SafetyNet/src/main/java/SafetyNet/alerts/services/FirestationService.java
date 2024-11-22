@@ -87,18 +87,20 @@ public class FirestationService {
         System.err.println("Aucun MedicalRecord trouvé pour la personne : "
                 + person.getFirstName() + " " + person.getLastName());
     }
+
     public FirestationDTO getPersonsCoveredByStation(int stationNumber) {
         // Récupérer les adresses liées à la station
         List<String> addresses = firestationRepository.findAddressesByStationNumber(stationNumber);
 
         if (addresses.isEmpty()) {
-            return new FirestationDTO(null, stationNumber, new ArrayList<>());
+            return new FirestationDTO(null, stationNumber, 0L, 0L, new ArrayList<>());
         }
 
         // Récupérer les résidents pour chaque adresse
         List<FirestationDTO.ResidentInfo> residents = new ArrayList<>();
         long numberOfChildren = 0;
         long numberOfAdults = 0;
+
 
         for (String address : addresses) {
             List<Person> persons = personRepository.findByAddress(List.of(address));
@@ -111,7 +113,9 @@ public class FirestationService {
                         .orElse(null);
 
                 if (medicalRecord != null) {
+
                     int age = AgeCalculatorDTO.calculateAge(medicalRecord.getBirthDate());
+
                     if (age <= 18) {
                         numberOfChildren++;
                     } else {
@@ -125,17 +129,23 @@ public class FirestationService {
                             medicalRecord.getMedications(),
                             medicalRecord.getAllergies()
                     ));
+                } else {
+                    System.out.println("No MedicalRecord found for: " + person.getFirstName() + " " + person.getLastName());
                 }
             }
         }
 
-        // Créer et retourner l'objet FirestationDTO
+        // Créer et retourner l'objet FirestationDTO avec les nouvelles valeurs
         return new FirestationDTO(
                 addresses.isEmpty() ? null : String.join(", ", addresses),
                 stationNumber,
+                numberOfAdults,
+                numberOfChildren,
                 residents
         );
     }
+
+
 
     public FirestationDTO getFireDetails(String address) {
         List<Person> peopleAtAddress = data.getPersons().stream()
@@ -151,31 +161,48 @@ public class FirestationService {
             return null;
         }
 
-        List<FirestationDTO.ResidentInfo> residents = peopleAtAddress.stream()
-                .map(person -> {
-                    MedicalRecord medicalRecord = data.getMedicalrecords().stream()
-                            .filter(record -> record.getFirstName().equalsIgnoreCase(person.getFirstName()) &&
-                                    record.getLastName().equalsIgnoreCase(person.getLastName()))
-                            .findFirst()
-                            .orElse(null);
+        List<FirestationDTO.ResidentInfo> residents = new ArrayList<>();
+        long numberOfChildren = 0;
+        long numberOfAdults = 0;
 
-                    if (medicalRecord == null) {
-                        return null;
-                    }
+        // Parcours des personnes à l'adresse pour calculer les enfants et adultes
+        for (Person person : peopleAtAddress) {
+            MedicalRecord medicalRecord = data.getMedicalrecords().stream()
+                    .filter(record -> record.getFirstName().equalsIgnoreCase(person.getFirstName()) &&
+                            record.getLastName().equalsIgnoreCase(person.getLastName()))
+                    .findFirst()
+                    .orElse(null);
 
-                    String firstName = person.getFirstName() + " " + person.getLastName();
-                    String phone = person.getPhone();
-                    int age = AgeCalculatorDTO.calculateAge(medicalRecord.getBirthDate());
-                    List<String> medications = medicalRecord.getMedications();
-                    List<String> allergies = medicalRecord.getAllergies();
+            if (medicalRecord == null) {
+                continue;
+            }
 
-                    return new FirestationDTO.ResidentInfo(firstName, phone, age, medications, allergies);
-                })
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+            int age = AgeCalculatorDTO.calculateAge(medicalRecord.getBirthDate());
+            if (age <= 18) {
+                numberOfChildren++;
+            } else {
+                numberOfAdults++;
+            }
 
-        return new FirestationDTO(firestation.getAddress(), firestation.getStation(), residents);
+            residents.add(new FirestationDTO.ResidentInfo(
+                    person.getFirstName() + " " + person.getLastName(),
+                    person.getPhone(),
+                    age,
+                    medicalRecord.getMedications(),
+                    medicalRecord.getAllergies()
+            ));
+        }
+
+        // Créer et retourner l'objet FirestationDTO avec les compteurs d'adultes et d'enfants
+        return new FirestationDTO(
+                firestation.getAddress(),
+                firestation.getStation(),
+                numberOfAdults,
+                numberOfChildren,
+                residents
+        );
     }
+
 
     private int calculateAge(LocalDate birthDate) {
         return Period.between(birthDate, LocalDate.now()).getYears();

@@ -11,6 +11,7 @@ import java.io.InputStream;
 @Configuration
 public class BeanConfiguration {
 
+
     @Bean
     public Data data() {
         try {
@@ -32,7 +33,9 @@ public class BeanConfiguration {
 
         } catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException("Error loading data.json", e);
+            throw new RuntimeException("Error loading data.json: " + e.getMessage(), e);
+
         }
     }
+
 }

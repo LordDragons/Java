@@ -6,11 +6,15 @@ import java.util.List;
 public class FirestationDTO {
     private String address;
     private Integer station;
+    private Long numberOfAdults;
+    private Long numberOfChildren;
     private List<ResidentInfo> residents;
 
-    public FirestationDTO(String address, Integer station, List<ResidentInfo> residents) {
+    public FirestationDTO(String address, Integer station, Long numberOfAdults, Long numberOfChildren, List<ResidentInfo> residents) {
         this.address = address;
         this.station = station;
+        this.numberOfAdults = numberOfAdults;
+        this.numberOfChildren = numberOfChildren;
         this.residents = residents;
     }
 
@@ -28,6 +32,22 @@ public class FirestationDTO {
 
     public void setStation(Integer station) {
         this.station = station;
+    }
+
+    public long getNumberOfAdults() {
+        return numberOfAdults;
+    }
+
+    public void setNumberOfAdults(long numberOfAdults) {
+        this.numberOfAdults = numberOfAdults;
+    }
+
+    public long getNumberOfChildren() {
+        return numberOfChildren;
+    }
+
+    public void setNumberOfChildren(long numberOfChildren) {
+        this.numberOfChildren = numberOfChildren;
     }
 
     public List<ResidentInfo> getResidents() {
