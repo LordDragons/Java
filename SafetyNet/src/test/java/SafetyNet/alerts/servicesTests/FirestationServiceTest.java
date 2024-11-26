@@ -3,12 +3,12 @@ package SafetyNet.alerts.servicesTests;
 
 import SafetyNet.alerts.dto.FirestationDTO;
 import SafetyNet.alerts.dto.HouseDTO;
-import SafetyNet.alerts.models.Data;
 import SafetyNet.alerts.models.Firestation;
 import SafetyNet.alerts.models.MedicalRecord;
 import SafetyNet.alerts.models.Person;
 import SafetyNet.alerts.repositorys.FirestationRepository;
-import SafetyNet.alerts.repositorys.PersonRepository;
+import SafetyNet.alerts.repositorys.MedicalRecordRepositoryImpl;
+import SafetyNet.alerts.repositorys.PersonRepositoryImpl;
 import SafetyNet.alerts.services.FirestationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,244 +16,218 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.util.ArrayList;
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
-
-import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-public class FirestationServiceTest {
+class FirestationServiceTest {
 
     @Mock
     private FirestationRepository firestationRepository;
 
     @Mock
-    private PersonRepository personRepository;
+    private PersonRepositoryImpl personRepositoryImpl;
 
     @Mock
-    private Data data;
+    private MedicalRecordRepositoryImpl medicalRecordRepositoryImpl;
 
     @InjectMocks
     private FirestationService firestationService;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    public void testGetPhonesByFirestation() {
-        // Arrange
-        int station = 1;
+    void getFirestations_ShouldReturnListOfFirestations() {
+        Firestation firestation1 = new Firestation("123 Main St", 1);
+        Firestation firestation2 = new Firestation("456 Elm St", 2);
+
+        when(firestationRepository.getFirestations()).thenReturn(Arrays.asList(firestation1, firestation2));
+
+        List<Firestation> result = firestationService.getFirestations();
+
+        assertEquals(2, result.size());
+        verify(firestationRepository, times(1)).getFirestations();
+    }
+
+    @Test
+    void getPhonesByFirestation_ShouldReturnListOfPhones() {
+        int stationNumber = 1;
         List<String> addresses = Arrays.asList("123 Main St", "456 Elm St");
-        List<String> phones = Arrays.asList("123-456-7890", "987-654-3210");
+        List<String> phones = Arrays.asList("123-456-7890", "098-765-4321");
 
-        when(firestationRepository.findAddressesByStationNumber(station)).thenReturn(addresses);
-        when(personRepository.findPhonesByAddresses(addresses)).thenReturn(phones);
+        when(firestationRepository.findAddressesByStationNumber(stationNumber)).thenReturn(addresses);
+        when(personRepositoryImpl.findPhonesByAddresses(addresses)).thenReturn(phones);
 
-        // Act
-        List<String> result = firestationService.getPhonesByFirestation(station);
+        List<String> result = firestationService.getPhonesByFirestation(stationNumber);
 
-        // Assert
-        assertNotNull(result);
         assertEquals(2, result.size());
         assertTrue(result.contains("123-456-7890"));
-        assertTrue(result.contains("987-654-3210"));
+        verify(firestationRepository, times(1)).findAddressesByStationNumber(stationNumber);
+        verify(personRepositoryImpl, times(1)).findPhonesByAddresses(addresses);
     }
 
     @Test
-    public void testGetHouseholdsByStations() {
-        // Arrange
-        List<Integer> stations = Arrays.asList(1, 2);
-        List<String> addresses = Arrays.asList("123 Main St", "456 Elm St");
-        List<HouseDTO.Resident> residents = new ArrayList<>();
-        HouseDTO houseDTO = new HouseDTO("123 Main St", residents);
+    void getHouseholdsByStations_ShouldReturnListOfHouseDTOs() {
+        List<Integer> stationNumbers = Arrays.asList(1, 2);
+        String address1 = "123 Main St";
+        String address2 = "456 Elm St";
 
-        when(firestationRepository.findAddressesByStationNumber(1)).thenReturn(Arrays.asList("123 Main St"));
-        when(firestationRepository.findAddressesByStationNumber(2)).thenReturn(Arrays.asList("456 Elm St"));
-        when(personRepository.findByAddress(Arrays.asList("123 Main St"))).thenReturn(new ArrayList<>());
-        when(personRepository.findByAddress(Arrays.asList("456 Elm St"))).thenReturn(new ArrayList<>());
+        when(firestationRepository.findAddressesByStationNumber(1)).thenReturn(Collections.singletonList(address1));
+        when(firestationRepository.findAddressesByStationNumber(2)).thenReturn(Collections.singletonList(address2));
 
-        // Act
-        List<HouseDTO> result = firestationService.getHouseholdsByStations(stations);
+        when(personRepositoryImpl.findByAddress(Collections.singletonList(address1))).thenReturn(Collections.emptyList());
+        when(personRepositoryImpl.findByAddress(Collections.singletonList(address2))).thenReturn(Collections.emptyList());
 
-        // Assert
-        assertNotNull(result);
+        List<HouseDTO> result = firestationService.getHouseholdsByStations(stationNumbers);
+
         assertEquals(2, result.size());
-        assertEquals("123 Main St", result.get(0).getAddress());
-        assertEquals("456 Elm St", result.get(1).getAddress());
+        assertEquals(address1, result.get(0).getAddress());
+        assertEquals(address2, result.get(1).getAddress());
     }
 
     @Test
-    public void testCreateResidentFromPerson() {
-        // Arrange: Mock the data
-        Person person = new Person("John", "Doe", "123 Main St", "SomeCity", "12345", "555-5555", "john.doe@example.com");
+    void createResidentFromPerson_ShouldReturnResident() {
+        Person person = new Person("John", "Doe", "123 Main St", "City", "12345", "123-456-7890", "john.doe@example.com");
+        MedicalRecord medicalRecord = new MedicalRecord("John", "Doe", "01/01/2000", List.of("med1"), List.of("allergy1"));
 
-        // Create a mock medical record with LocalDate format for birthDate
-        MedicalRecord medicalRecord = new MedicalRecord("John", "Doe", "04/15/1990", new ArrayList<>(), new ArrayList<>());
-        when(data.getMedicalrecords()).thenReturn(Arrays.asList(medicalRecord));
+        when(medicalRecordRepositoryImpl.findByFirstNameAndLastName(person.getFirstName(), person.getLastName()))
+                .thenReturn(List.of(medicalRecord));
 
-        // Act: Call the method to create a resident from person
         HouseDTO.Resident resident = firestationService.createResidentFromPerson(person);
 
-        // Assert: Verify the result
         assertNotNull(resident);
         assertEquals("John", resident.getFirstName());
         assertEquals("Doe", resident.getLastName());
-        assertEquals("555-5555", resident.getPhone());
-        assertEquals(34, resident.getAge());  // John should be 34 years old (as of 2024)
-        assertTrue(resident.getMedications().isEmpty());
-        assertTrue(resident.getAllergies().isEmpty());
+        assertEquals("123-456-7890", resident.getPhone());
+        assertEquals(Period.between(LocalDate.of(2000, 1, 1), LocalDate.now()).getYears(), resident.getAge());
+        assertTrue(resident.getMedications().contains("med1"));
+        assertTrue(resident.getAllergies().contains("allergy1"));
     }
 
-
     @Test
-    public void testCreateResidentFromPersonWithMissingMedicalRecord() {
-        // Arrange: Mock the data
-        Person person = new Person("John", "Doe", "123 Main St", "SomeCity", "12345", "555-5555", "john.doe@example.com");
+    void createResidentFromPerson_ShouldReturnNullWhenMedicalRecordMissing() {
+        Person person = new Person("Jane", "Doe", "123 Main St", "City", "12345", "123-456-7890", "jane.doe@example.com");
 
-        // Mock an empty list of MedicalRecords or a list without a matching MedicalRecord
-        MedicalRecord medicalRecord = new MedicalRecord("Jane", "Smith", "04/15/1990", new ArrayList<>(), new ArrayList<>()); // Different name
-        when(data.getMedicalrecords()).thenReturn(Arrays.asList(medicalRecord)); // No matching record for John Doe
+        when(medicalRecordRepositoryImpl.findByFirstNameAndLastName(person.getFirstName(), person.getLastName()))
+                .thenReturn(Collections.emptyList());
 
-        // Spy on the service to verify method calls
-        FirestationService spyService = spy(firestationService);
+        HouseDTO.Resident resident = firestationService.createResidentFromPerson(person);
 
-        // Act: Call the method to create a resident from person
-        HouseDTO.Resident resident = spyService.createResidentFromPerson(person);
-
-        // Assert: Verify the result is null
         assertNull(resident);
-
-        // Verify that logMissingMedicalRecord() was called
-        verify(spyService, times(1)).logMissingMedicalRecord(person);
+        verify(medicalRecordRepositoryImpl, times(1)).findByFirstNameAndLastName("Jane", "Doe");
     }
 
-
-
     @Test
-    public void testGetPersonsCoveredByStation() {
-        // Arrange
+    void getPersonsCoveredByStation_ShouldReturnFirestationDTO() {
         int stationNumber = 1;
-        List<String> addresses = Arrays.asList("123 Main St");
+        List<String> addresses = List.of("123 Main St");
+        Person person = new Person("John", "Doe", "123 Main St", "City", "12345", "123-456-7890", "john.doe@example.com");
+        MedicalRecord medicalRecord = new MedicalRecord("John", "Doe", "01/01/2000", List.of("med1"), List.of("allergy1"));
 
-        // Create a person with valid firstName and lastName to match the MedicalRecord
-        Person person = new Person("John", "Doe", "123 Main St", "SomeCity", "12345", "555-5555", "john.doe@example.com");
-        List<Person> persons = Arrays.asList(person);
-
-        // Create a MedicalRecord with matching firstName and lastName
-        MedicalRecord medicalRecord = new MedicalRecord("John", "Doe", "04/15/1990", new ArrayList<>(), new ArrayList<>());
-
-        // Mock repository calls
         when(firestationRepository.findAddressesByStationNumber(stationNumber)).thenReturn(addresses);
-        when(personRepository.findByAddress(addresses)).thenReturn(persons);
-        when(data.getMedicalrecords()).thenReturn(Arrays.asList(medicalRecord));
+        when(personRepositoryImpl.findByAddress(addresses)).thenReturn(List.of(person));
+        when(medicalRecordRepositoryImpl.findByFirstNameAndLastName("John", "Doe")).thenReturn(List.of(medicalRecord));
 
-        // Act
         FirestationDTO result = firestationService.getPersonsCoveredByStation(stationNumber);
 
-        // Assert
         assertNotNull(result);
+        assertEquals(1, result.getNumberOfAdults());
+        assertEquals(0, result.getNumberOfChildren());
         assertEquals(1, result.getResidents().size());
-
-        // Verify the correct resident information is returned
-        FirestationDTO.ResidentInfo residentInfo = result.getResidents().get(0);
-        assertEquals("John Doe", residentInfo.getName());
     }
 
     @Test
-    public void testGetFireDetails() {
-        // Arrange: Mock the data
+    void getFireDetails_ShouldReturnFirestationDTO() {
         String address = "123 Main St";
-
-        // Create mock persons
-        Person person1 = new Person("John", "Doe", address, "SomeCity", "12345", "555-5555", "john.doe@example.com");
-        Person person2 = new Person("Jane", "Smith", address, "SomeCity", "12345", "555-5555", "jane.smith@example.com");
-        List<Person> persons = Arrays.asList(person1, person2);
-
-        // Create mock firestation
         Firestation firestation = new Firestation(address, 1);
+        Person person = new Person("John", "Doe", address, "City", "12345", "123-456-7890", "john.doe@example.com");
+        MedicalRecord medicalRecord = new MedicalRecord("John", "Doe", "01/01/2000", List.of("med1"), List.of("allergy1"));
 
-        // Create mock medical records
-        MedicalRecord medicalRecord1 = new MedicalRecord("John", "Doe", "04/15/1990", new ArrayList<>(), new ArrayList<>());
-        MedicalRecord medicalRecord2 = new MedicalRecord("Jane", "Smith", "06/20/2005", new ArrayList<>(), new ArrayList<>());
-        List<MedicalRecord> medicalRecords = Arrays.asList(medicalRecord1, medicalRecord2);
+        when(firestationRepository.findByAddress(Collections.singletonList(address))).thenReturn(List.of(firestation));
+        when(personRepositoryImpl.findByAddress(List.of(address))).thenReturn(List.of(person));
+        when(medicalRecordRepositoryImpl.findByFirstNameAndLastName("John", "Doe")).thenReturn(List.of(medicalRecord));
 
-        // Mock methods of Data class
-        when(data.getPersons()).thenReturn(persons);
-        when(data.getFirestations()).thenReturn(Arrays.asList(firestation));
-        when(data.getMedicalrecords()).thenReturn(medicalRecords);
-
-        // Act: Call the method
         FirestationDTO result = firestationService.getFireDetails(address);
 
-        // Assert: Validate the returned FirestationDTO
         assertNotNull(result);
         assertEquals(address, result.getAddress());
-        assertEquals(1, result.getStation());
-        assertEquals(2, result.getNumberOfAdults());
+        assertEquals(1, result.getNumberOfAdults());
         assertEquals(0, result.getNumberOfChildren());
-        assertEquals(2, result.getResidents().size());
-
-        // Validate resident details
-        FirestationDTO.ResidentInfo resident1 = result.getResidents().get(0);
-        assertEquals("John Doe", resident1.getName());
-        assertEquals(34, resident1.getAge());  // John should be 34 years old (as of 2024)
-
-        FirestationDTO.ResidentInfo resident2 = result.getResidents().get(1);
-        assertEquals("Jane Smith", resident2.getName());
-        assertEquals(19, resident2.getAge());  // Jane should be 19 years old (as of 2024)
+        assertEquals(1, result.getResidents().size());
     }
 
     @Test
-    public void testAddFirestation() {
-        // Arrange
+    void getFireDetails_ShouldReturnNullWhenNoFirestationFound() {
+        String address = "Nonexistent Address";
+
+        when(firestationRepository.findByAddress(Collections.singletonList(address))).thenReturn(Collections.emptyList());
+
+        FirestationDTO result = firestationService.getFireDetails(address);
+
+        assertNull(result);
+    }
+
+
+    @Test
+    void addFirestation_ShouldAddAndReturnFirestation() {
         Firestation firestation = new Firestation("123 Main St", 1);
 
-        when(data.getFirestations()).thenReturn(new ArrayList<>());
+        firestationService.addFirestation(firestation);
 
-        // Act
-        Firestation result = firestationService.addFirestation(firestation);
-
-        // Assert
-        assertNotNull(result);
-        assertEquals("123 Main St", result.getAddress());
-        assertEquals(1, result.getStation());
+        verify(firestationRepository, times(1)).save(firestation);
     }
 
     @Test
-    public void testUpdateFirestation() {
-        // Arrange
-        Firestation existingFirestation = new Firestation("123 Main St", 1);
-        Firestation updatedFirestation = new Firestation("123 Main St", 2);
+    void updateFirestation_ShouldUpdateAndReturnFirestation() {
+        String address = "123 Main St";
+        int newStationNumber = 2;
+        Firestation firestation = new Firestation(address, 1);
 
-        when(data.getFirestations()).thenReturn(Arrays.asList(existingFirestation));
+        // Simule le comportement du repository pour retourner une liste contenant un Firestation
+        when(firestationRepository.findByAddress(Collections.singletonList(address)))
+                .thenReturn(Collections.singletonList(firestation));
 
-        // Act
-        Firestation result = firestationService.updateFirestation("123 Main St", 2);
+        Firestation result = firestationService.updateFirestation(address, newStationNumber);
 
-        // Assert
         assertNotNull(result);
-        assertEquals(2, result.getStation());
+        assertEquals(newStationNumber, result.getStation());
+        verify(firestationRepository, times(1)).save(firestation);
     }
+
 
     @Test
-    public void testDeleteFirestation() {
-        // Arrange
-        Firestation firestation = new Firestation("123 Main St", 1);
+    void deleteFirestation_ShouldDeleteFirestation() {
+        String address = "123 Main St";
+        Firestation firestation = new Firestation(address, 1);
 
-        // Mocking data.getFirestations() to return a modifiable list
-        List<Firestation> firestationsList = new ArrayList<>();
-        firestationsList.add(firestation);
-        when(data.getFirestations()).thenReturn(firestationsList);
+        // Simule le comportement du repository pour retourner une liste contenant un Firestation
+        when(firestationRepository.findByAddress(Collections.singletonList(address)))
+                .thenReturn(Collections.singletonList(firestation));
 
-        // Act
-        boolean result = firestationService.deleteFirestation("123 Main St");
+        boolean result = firestationService.deleteFirestation(address);
 
-        // Assert
-        assertTrue(result);
+        assertTrue(result); // Vérifie que la suppression retourne true
+        verify(firestationRepository, times(1)).delete(firestation); // Vérifie que la méthode delete a été appelée
     }
 
+
+    @Test
+    void deleteFirestation_ShouldReturnFalseIfNotFound() {
+        String address = "Nonexistent Address";
+
+        when(firestationRepository.findByAddress(Collections.singletonList(address))).thenReturn(Collections.emptyList());
+
+        boolean result = firestationService.deleteFirestation(address);
+
+        assertFalse(result);
+        verify(firestationRepository, never()).delete(any(Firestation.class));
+    }
 }

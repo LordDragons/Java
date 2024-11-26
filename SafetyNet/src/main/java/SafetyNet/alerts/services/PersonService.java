@@ -25,7 +25,7 @@ import java.util.Optional;
 @Service
 public class PersonService {
 
-    private final Data data;
+
     private final MedicalRecordService medicalRecordService;  // Injection de dépendance
     private final PersonRepositoryImpl personRepositoryImpl;
     private final MedicalRecordRepositoryImpl medicalRecordRepositoryImpl;
@@ -35,9 +35,8 @@ public class PersonService {
 
     // Constructeur avec injection de MedicalRecordService
     @Autowired
-    public PersonService(Data data, MedicalRecordService medicalRecordService, PersonRepositoryImpl personRepositoryImpl,MedicalRecordRepositoryImpl medicalRecordRepositoryImpl)
+    public PersonService(MedicalRecordService medicalRecordService, PersonRepositoryImpl personRepositoryImpl,MedicalRecordRepositoryImpl medicalRecordRepositoryImpl)
     {
-        this.data = data;
         this.medicalRecordService = medicalRecordService;  // Assignation de la dépendance
         this.personRepositoryImpl = personRepositoryImpl;
         this.medicalRecordRepositoryImpl = medicalRecordRepositoryImpl;
@@ -50,43 +49,50 @@ public class PersonService {
 
     // Méthode pour récupérer les enfants d'une adresse
     public List<ChildAlertDTO> getChildrenByAddress(String address) {
-        // Récupère toutes les personnes à l'adresse donnée
+        // Fetch all persons at the given address
         List<Person> personsAtAddress = personRepositoryImpl.findByAddress(Collections.singletonList(address));
         List<ChildAlertDTO> children = new ArrayList<>();
 
-        // Parcourt chaque personne pour vérifier les informations de dossier médical
         for (Person person : personsAtAddress) {
             try {
-                // Récupération du dossier médical via le service MedicalRecordService pour chaque personne
-                MedicalRecord medicalRecord = data.getMedicalrecords().stream()
-                        .filter(m -> m.getFirstName().equalsIgnoreCase(person.getFirstName()))
-                        .filter(m -> m.getLastName().equalsIgnoreCase(person.getLastName()))
-                        .findFirst()
-                        .orElse(null);
+                // Assume this returns a List<MedicalRecord>
+                List<MedicalRecord> medicalRecords = medicalRecordRepositoryImpl.findByFirstNameAndLastName(
+                        person.getFirstName(),
+                        person.getLastName()
+                );
 
-                // Si le dossier médical est manquant, on ignore cette personne
-                if (medicalRecord == null) {
-                    System.err.println("Dossier médical manquant pour " + person.getFirstName() + " " + person.getLastName());
-                    continue;  // Passe à la personne suivante
+                // Ensure there's at least one medical record
+                if (medicalRecords == null || medicalRecords.isEmpty()) {
+                    System.err.println("No medical record found for " + person.getFirstName() + " " + person.getLastName());
+                    continue;
                 }
 
-                // Vérifie si la personne est un enfant (âge <= 18)
+                // Use the first record for this person (if multiple exist)
+                MedicalRecord medicalRecord = medicalRecords.get(0);
+
                 String birthDateString = medicalRecord.getBirthDate();
                 int age = calculateAge(birthDateString);
+
                 if (age <= 18) {
-                    // Si c'est un enfant, on crée un ChildAlertDTO
+                    // Collect household members excluding the child
                     List<String> householdMembers = new ArrayList<>();
                     for (Person householdMember : personsAtAddress) {
                         if (!householdMember.equals(person)) {
                             householdMembers.add(householdMember.getFirstName() + " " + householdMember.getLastName());
                         }
                     }
-                    ChildAlertDTO child = new ChildAlertDTO(person.getFirstName(), person.getLastName(), age, householdMembers);
+
+                    // Create ChildAlertDTO
+                    ChildAlertDTO child = new ChildAlertDTO(
+                            person.getFirstName(),
+                            person.getLastName(),
+                            age,
+                            householdMembers
+                    );
                     children.add(child);
                 }
             } catch (IllegalStateException e) {
-                // Gérer l'exception si une personne a un dossier médical mais que la date de naissance est manquante
-                System.err.println("Erreur lors du calcul de l'âge pour " + person.getFirstName() + " " + person.getLastName() + ": " + e.getMessage());
+                System.err.println("Error processing medical record for " + person.getFirstName() + " " + person.getLastName() + ": " + e.getMessage());
             }
         }
 
@@ -94,59 +100,21 @@ public class PersonService {
     }
 
 
+
     // Méthode pour récupérer les informations d'une personne
     public List<PersonInfoDTO> getPersonInfo(String firstName, String lastName) {
-        // Recherche de la personne par prénom et nom
-        Person person = data.getPersons().stream()
-                .filter(p -> p.getFirstName().equalsIgnoreCase(firstName))
-                .filter(p -> p.getLastName().equalsIgnoreCase(lastName))
-                .findFirst()
-                .orElseGet(() -> new Person());  // Retourne une nouvelle Person si non trouvée
-
-        // Récupération du dossier médical via le service MedicalRecordService
-        MedicalRecord medicalRecord = data.getMedicalrecords().stream()
-                .filter(m -> m.getFirstName().equalsIgnoreCase(firstName))
-                .filter(m -> m.getLastName().equalsIgnoreCase(lastName))
-                .findFirst()
-                .orElse(null);
-
-        if (medicalRecord == null) {
-            // Retourner une liste vide ou une erreur si le MedicalRecord n'est pas trouvé
-            return new ArrayList<>();
-        }
-
-        // Récupération de la date de naissance et calcul de l'âge
-        String birthDateString = medicalRecord.getBirthDate();
-        int age = calculateAge(birthDateString);
-        // Création du DTO avec les informations de la personne et ses informations médicales
-        PersonInfoDTO personInfoDTO = new PersonInfoDTO();
-        personInfoDTO.setFirstName(person.getFirstName());
-        personInfoDTO.setLastName(person.getLastName());
-        personInfoDTO.setAddress(person.getAddress());
-        personInfoDTO.setAge(age);
-        personInfoDTO.setEmail(person.getEmail());
-
-        // Si le dossier médical est trouvé, on ajoute les médications et allergies, sinon on laisse vides
-        if (medicalRecord != null) {
-            personInfoDTO.setMedications(medicalRecord.getMedications());
-            personInfoDTO.setAllergies(medicalRecord.getAllergies());
-        } else {
-            personInfoDTO.setMedications(List.of()); // Liste vide si dossier médical non trouvé
-            personInfoDTO.setAllergies(List.of()); // Liste vide si dossier médical non trouvé
-        }
-
         // Retourne le DTO avec toutes les informations
-        return List.of(personInfoDTO);
+        return personRepositoryImpl.getPersonInfo(firstName, lastName);
     }
 
     public Person addPerson(Person person) {
-        data.getPersons().add(person);
+        personRepositoryImpl.getPersons().add(person);
         return person;
     }
 
 
     public Optional<Person> updatePerson(Person person) {
-        return data.getPersons().stream()
+        return personRepositoryImpl.getPersons().stream()
                 .filter(p -> p.getFirstName().equalsIgnoreCase(person.getFirstName()) &&
                         p.getLastName().equalsIgnoreCase(person.getLastName()))
                 .findFirst()
@@ -163,7 +131,7 @@ public class PersonService {
 
 
     public boolean deletePerson(String firstName, String lastName) {
-        boolean isDeleted = data.getPersons().removeIf(p ->
+        boolean isDeleted = personRepositoryImpl.getPersons().removeIf(p ->
                 p.getFirstName().equalsIgnoreCase(firstName) &&
                         p.getLastName().equalsIgnoreCase(lastName));
 
@@ -193,9 +161,9 @@ public class PersonService {
         }
 
 
+    }
 }
-}
-    //        return data.getPersons().stream()
+//        return data.getPersons().stream()
 //                .filter(person -> person.getFirstName().equalsIgnoreCase(firstName)
 //                        && person.getLastName().equalsIgnoreCase(lastName))
 //                .map(person -> {
@@ -219,8 +187,3 @@ public class PersonService {
 //                    return dto;
 //                })
 //                .collect(Collectors.toList());
-
-
-
-
-

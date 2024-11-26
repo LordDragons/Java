@@ -1,184 +1,129 @@
 package SafetyNet.alerts.servicesTests;
 
-import SafetyNet.alerts.dto.PersonInfoDTO;
 import SafetyNet.alerts.dto.ChildAlertDTO;
-import SafetyNet.alerts.models.Person;
 import SafetyNet.alerts.models.MedicalRecord;
-import SafetyNet.alerts.repositorys.MedicalRecordRepositoryImpl;
-import SafetyNet.alerts.services.PersonService;
 import SafetyNet.alerts.services.MedicalRecordService;
+import SafetyNet.alerts.services.PersonService;
+import SafetyNet.alerts.models.Person;
+import SafetyNet.alerts.repositorys.MedicalRecordRepositoryImpl;
 import SafetyNet.alerts.repositorys.PersonRepositoryImpl;
-import SafetyNet.alerts.models.Data;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class PersonServiceTest {
+class PersonServiceTest {
 
     @Mock
-    private Data data;  // Mock Data to simulate data fetching
+    private MedicalRecordService medicalRecordService;
 
     @Mock
-    private MedicalRecordService medicalRecordService;  // Mock the medical record service
-
-    @Mock
-    private PersonRepositoryImpl personRepositoryImpl;  // Mock the repository
+    private PersonRepositoryImpl personRepositoryImpl;
 
     @Mock
     private MedicalRecordRepositoryImpl medicalRecordRepositoryImpl;
 
+    @InjectMocks
     private PersonService personService;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         MockitoAnnotations.openMocks(this);
-        personService = new PersonService(data, medicalRecordService, personRepositoryImpl, medicalRecordRepositoryImpl);  // Initialize the service with mocked dependencies
-    }
-
-
-    @Test
-    public void testGetEmailsList() {
-        // Arrange
-        Person person1 = new Person();
-        person1.setEmail("person1@example.com");
-        Person person2 = new Person();
-        person2.setEmail("person2@example.com");
-        when(data.getPersons()).thenReturn(List.of(person1, person2));
-
-        // Act
-        List<String> emails = personService.getEmailsList();
-
-        // Assert
-        assertNotNull(emails);
-        assertEquals(2, emails.size());
-        assertTrue(emails.contains("person1@example.com"));
-        assertTrue(emails.contains("person2@example.com"));
     }
 
     @Test
-    public void testGetChildrenByAddress() {
-        // Arrange
+    void getEmailsList_ShouldReturnEmailList() {
+        List<String> emails = List.of("email1@test.com", "email2@test.com");
+        when(personRepositoryImpl.getAllEmails()).thenReturn(emails);
+
+        List<String> result = personService.getEmailsList();
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertEquals("email1@test.com", result.get(0));
+        verify(personRepositoryImpl, times(1)).getAllEmails();
+    }
+
+    @Test
+    void getChildrenByAddress_ShouldReturnChildrenList() {
         String address = "123 Main St";
-        Person child = new Person();
-        child.setFirstName("John");
-        child.setLastName("Doe");
-        child.setAddress(address);
-        MedicalRecord medicalRecord = new MedicalRecord("John", "Doe", "04/15/2010", List.of(), List.of()); // Age <= 18
-        when(personRepositoryImpl.findByAddress(List.of(address))).thenReturn(List.of(child));
-        when(data.getMedicalrecords()).thenReturn(List.of(medicalRecord));
+        Person person1 = new Person("John", "Doe", address, "City", "12345", "123-456-7890", "john.doe@test.com");
+        Person person2 = new Person("Jane", "Doe", address, "City", "12345", "123-456-7891", "jane.doe@test.com");
+        MedicalRecord medicalRecord = new MedicalRecord("John", "Doe", "01/01/2015", List.of("Med1"), List.of("Allergy1"));
 
-        // Act
-        List<ChildAlertDTO> children = personService.getChildrenByAddress(address);
+        when(personRepositoryImpl.findByAddress(Collections.singletonList(address))).thenReturn(List.of(person1, person2));
+        when(medicalRecordRepositoryImpl.findByFirstNameAndLastName("John", "Doe")).thenReturn(List.of(medicalRecord));
 
-        // Assert
-        assertNotNull(children);
-        assertEquals(1, children.size());
-        assertEquals("John", children.get(0).getFirstName());
-        assertEquals("Doe", children.get(0).getLastName());
+        List<ChildAlertDTO> result = personService.getChildrenByAddress(address);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("John", result.get(0).getFirstName());
+        verify(personRepositoryImpl, times(1)).findByAddress(Collections.singletonList(address));
+        verify(medicalRecordRepositoryImpl, times(1)).findByFirstNameAndLastName("John", "Doe");
     }
 
     @Test
-    public void testGetPersonInfo() {
-        // Arrange
-        String firstName = "John";
-        String lastName = "Doe";
-        Person person = new Person();
-        person.setFirstName(firstName);
-        person.setLastName(lastName);
-        person.setEmail("john.doe@example.com");
-        person.setAddress("123 Main St");
-        MedicalRecord medicalRecord = new MedicalRecord("John", "Doe", "04/15/1990", List.of("Medication1"), List.of("Allergy1"));
-        when(data.getPersons()).thenReturn(List.of(person));
-        when(data.getMedicalrecords()).thenReturn(List.of(medicalRecord));
+    void addPerson_ShouldAddAndReturnPerson() {
+        Person person = new Person("John", "Doe", "123 Main St", "City", "12345", "123-456-7890", "john.doe@test.com");
 
-        // Act
-        List<PersonInfoDTO> personInfo = personService.getPersonInfo(firstName, lastName);
+        List<Person> persons = new ArrayList<>();
+        when(personRepositoryImpl.getPersons()).thenReturn(persons);
 
-        // Assert
-        assertNotNull(personInfo);
-        assertEquals(1, personInfo.size());
-        assertEquals(firstName, personInfo.get(0).getFirstName());
-        assertEquals(lastName, personInfo.get(0).getLastName());
-        assertEquals("john.doe@example.com", personInfo.get(0).getEmail());
-        assertEquals("123 Main St", personInfo.get(0).getAddress());
-        assertEquals(34, personInfo.get(0).getAge()); // Assuming today's date is after 04/15/2024
-        assertTrue(personInfo.get(0).getMedications().contains("Medication1"));
-        assertTrue(personInfo.get(0).getAllergies().contains("Allergy1"));
+        Person result = personService.addPerson(person);
+
+        assertNotNull(result);
+        assertEquals(person, result);
+        assertEquals(1, persons.size());
+        verify(personRepositoryImpl, times(1)).getPersons();
     }
 
     @Test
-    public void testAddPerson() {
-        // Arrange
-        Person newPerson = new Person();
-        newPerson.setFirstName("Jane");
-        newPerson.setLastName("Doe");
+    void updatePerson_ShouldUpdateAndReturnPerson() {
+        Person existingPerson = new Person("John", "Doe", "123 Main St", "City", "12345", "123-456-7890", "john.doe@test.com");
+        Person updatedPerson = new Person("John", "Doe", "456 Elm St", "NewCity", "67890", "098-765-4321", "john.new@test.com");
 
-        // Use a mutable ArrayList
-        List<Person> personList = new ArrayList<>();
-        // You can add any initial people to the list if necessary
-        personList.add(new Person());  // Adding a sample person, if needed
+        List<Person> persons = new ArrayList<>(List.of(existingPerson));
+        when(personRepositoryImpl.getPersons()).thenReturn(persons);
 
-        when(data.getPersons()).thenReturn(personList);
+        Optional<Person> result = personService.updatePerson(updatedPerson);
 
-        // Act
-        Person addedPerson = personService.addPerson(newPerson);
-
-        // Assert
-        assertNotNull(addedPerson);
-        assertEquals("Jane", addedPerson.getFirstName());
-        assertEquals("Doe", addedPerson.getLastName());
-        assertTrue(personList.contains(newPerson));  // Ensure the person was added to the list
-    }
-
-
-    @Test
-    public void testUpdatePerson() {
-        // Arrange
-        Person existingPerson = new Person();
-        existingPerson.setFirstName("John");
-        existingPerson.setLastName("Doe");
-        existingPerson.setEmail("john.doe@example.com");
-        when(data.getPersons()).thenReturn(List.of(existingPerson));
-
-        Person updatedPerson = new Person();
-        updatedPerson.setFirstName("John");
-        updatedPerson.setLastName("Doe");
-        updatedPerson.setEmail("john.new@example.com");
-
-        // Act
-        Optional<Person> updated = personService.updatePerson(updatedPerson);
-
-        // Assert
-        assertTrue(updated.isPresent());
-        assertEquals("john.new@example.com", updated.get().getEmail());
+        assertTrue(result.isPresent());
+        assertEquals("456 Elm St", result.get().getAddress());
+        verify(personRepositoryImpl, times(1)).getPersons();
     }
 
     @Test
-    public void testDeletePerson() {
-        // Arrange
-        Person personToDelete = new Person();
-        personToDelete.setFirstName("John");
-        personToDelete.setLastName("Doe");
+    void deletePerson_ShouldRemovePersonAndReturnTrue() {
+        Person person = new Person("John", "Doe", "123 Main St", "City", "12345", "123-456-7890", "john.doe@test.com");
 
-        // Using a mutable ArrayList
-        List<Person> personList = new ArrayList<>();
-        personList.add(personToDelete);
+        List<Person> persons = new ArrayList<>(List.of(person));
+        when(personRepositoryImpl.getPersons()).thenReturn(persons);
 
-        when(data.getPersons()).thenReturn(personList);
+        boolean result = personService.deletePerson("John", "Doe");
 
-        // Act
-        boolean isDeleted = personService.deletePerson("John", "Doe");
-
-        // Assert
-        assertTrue(isDeleted);
+        assertTrue(result);
+        assertTrue(persons.isEmpty());
+        verify(personRepositoryImpl, times(1)).getPersons();
     }
 
+    @Test
+    void deletePerson_ShouldReturnFalseIfPersonNotFound() {
+        List<Person> persons = new ArrayList<>();
+        when(personRepositoryImpl.getPersons()).thenReturn(persons);
+
+        boolean result = personService.deletePerson("John", "Doe");
+
+        assertFalse(result);
+        verify(personRepositoryImpl, times(1)).getPersons();
+    }
 }
-

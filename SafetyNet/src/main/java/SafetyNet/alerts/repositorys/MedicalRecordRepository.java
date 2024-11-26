@@ -1,27 +1,21 @@
 package SafetyNet.alerts.repositorys;
 
-import SafetyNet.alerts.models.Data;
+import SafetyNet.alerts.dto.HouseDTO;
 import SafetyNet.alerts.models.MedicalRecord;
+import SafetyNet.alerts.models.Person;
 
+import java.util.Collection;
 import java.util.List;
 
-public class MedicalRecordRepository {
-    private final List<MedicalRecord> medicalRecords;
+public interface MedicalRecordRepository {
 
-    public MedicalRecordRepository(Data data) {
-        this.medicalRecords = data.getMedicalrecords();  // Initialisation à partir de vos données JSON
-    }
+    // Récupère tous les dossiers médicaux
+    List<MedicalRecord> findAll();
 
-    public List<MedicalRecord> findAll() {
-        return medicalRecords;
-    }
+    // Recherche un dossier médical par prénom et nom de famille
+    List<MedicalRecord> findByFirstNameAndLastName(String firstName, String lastName);
 
-    public MedicalRecord findByFirstNameAndLastName(String firstName, String lastName) {
-        return medicalRecords.stream()
-                .filter(m -> m.getFirstName().equalsIgnoreCase(firstName))
-                .filter(m -> m.getLastName().equalsIgnoreCase(lastName))
-                .findFirst()
-                .orElse(null);
-    }
+    HouseDTO.Resident createResidentFromPerson(Person person);
+
+    Collection<Object> getMedicalrecords();
 }
-

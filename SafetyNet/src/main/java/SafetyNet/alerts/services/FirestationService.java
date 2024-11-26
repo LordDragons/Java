@@ -1,49 +1,54 @@
 package SafetyNet.alerts.services;
 
-
 import SafetyNet.alerts.dto.FirestationDTO;
 import SafetyNet.alerts.dto.HouseDTO;
-import SafetyNet.alerts.models.Data;
 import SafetyNet.alerts.models.Firestation;
 import SafetyNet.alerts.models.MedicalRecord;
 import SafetyNet.alerts.models.Person;
 import SafetyNet.alerts.repositorys.FirestationRepository;
-import SafetyNet.alerts.repositorys.PersonRepository;
+import SafetyNet.alerts.repositorys.FirestationRepositoryImpl;
+import SafetyNet.alerts.repositorys.MedicalRecordRepositoryImpl;
+import SafetyNet.alerts.repositorys.PersonRepositoryImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.time.Period;
-import java.util.ArrayList;
-import java.util.List;
 
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 public class FirestationService {
 
-    private final Data data;
     private final FirestationRepository firestationRepository;
-    private final PersonRepository personRepository;
+    private final PersonRepositoryImpl personRepositoryImpl;
+    private final MedicalRecordRepositoryImpl medicalRecordRepositoryImpl;
+    private final FirestationRepositoryImpl firestationRepositoryImpl;
+
+
 
     @Autowired
-    public FirestationService(Data data, FirestationRepository firestationRepository, PersonRepository personRepository) {
-        this.data = data;
+    public FirestationService(FirestationRepository firestationRepository,
+                              PersonRepositoryImpl personRepositoryImpl,
+                              MedicalRecordRepositoryImpl medicalRecordRepositoryImpl,
+                              FirestationRepositoryImpl firestationRepositoryImpl) {
         this.firestationRepository = firestationRepository;
-        this.personRepository = personRepository;
+        this.personRepositoryImpl = personRepositoryImpl;
+        this.medicalRecordRepositoryImpl = medicalRecordRepositoryImpl;
+        this.firestationRepositoryImpl = firestationRepositoryImpl;
     }
 
-    // Méthode pour récupérer les numéros de téléphone par station
+    public List<Firestation> getFirestations() {
+        return firestationRepository.getFirestations();
+    }
+
     public List<String> getPhonesByFirestation(int station) {
         List<String> addresses = firestationRepository.findAddressesByStationNumber(station);
         if (addresses.isEmpty()) {
             return new ArrayList<>();
         }
-        return personRepository.findPhonesByAddresses(addresses);
+        return personRepositoryImpl.findPhonesByAddresses(addresses);
     }
 
-    // Méthode pour récupérer les foyers par liste de stations
     public List<HouseDTO> getHouseholdsByStations(List<Integer> stations) {
         return stations.stream()
                 .flatMap(station -> firestationRepository.findAddressesByStationNumber(station).stream()
@@ -52,7 +57,7 @@ public class FirestationService {
     }
 
     private HouseDTO createHouseDTO(String address) {
-        List<HouseDTO.Resident> residents = personRepository.findByAddress(List.of(address)).stream()
+        List<HouseDTO.Resident> residents = personRepositoryImpl.findByAddress(List.of(address)).stream()
                 .map(this::createResidentFromPerson)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
@@ -61,9 +66,8 @@ public class FirestationService {
     }
 
     public HouseDTO.Resident createResidentFromPerson(Person person) {
-        MedicalRecord medicalRecord = data.getMedicalrecords().stream()
-                .filter(m -> m.getFirstName().equalsIgnoreCase(person.getFirstName()))
-                .filter(m -> m.getLastName().equalsIgnoreCase(person.getLastName()))
+        MedicalRecord medicalRecord = medicalRecordRepositoryImpl.findByFirstNameAndLastName(
+                        person.getFirstName(), person.getLastName()).stream()
                 .findFirst()
                 .orElse(null);
 
@@ -71,7 +75,6 @@ public class FirestationService {
             logMissingMedicalRecord(person);
             return null;
         }
-
 
         return new HouseDTO.Resident(
                 person.getFirstName(),
@@ -89,31 +92,26 @@ public class FirestationService {
     }
 
     public FirestationDTO getPersonsCoveredByStation(int stationNumber) {
-        // Récupérer les adresses liées à la station
         List<String> addresses = firestationRepository.findAddressesByStationNumber(stationNumber);
 
         if (addresses.isEmpty()) {
             return new FirestationDTO(null, stationNumber, 0L, 0L, new ArrayList<>());
         }
 
-        // Récupérer les résidents pour chaque adresse
         List<FirestationDTO.ResidentInfo> residents = new ArrayList<>();
         long numberOfChildren = 0;
         long numberOfAdults = 0;
 
-
         for (String address : addresses) {
-            List<Person> persons = personRepository.findByAddress(List.of(address));
+            List<Person> persons = personRepositoryImpl.findByAddress(List.of(address));
 
             for (Person person : persons) {
-                MedicalRecord medicalRecord = data.getMedicalrecords().stream()
-                        .filter(m -> m.getFirstName().equalsIgnoreCase(person.getFirstName()))
-                        .filter(m -> m.getLastName().equalsIgnoreCase(person.getLastName()))
+                MedicalRecord medicalRecord = medicalRecordRepositoryImpl.findByFirstNameAndLastName(
+                                person.getFirstName(), person.getLastName()).stream()
                         .findFirst()
                         .orElse(null);
 
                 if (medicalRecord != null) {
-
                     int age = PersonService.calculateAge(medicalRecord.getBirthDate());
 
                     if (age <= 18) {
@@ -129,13 +127,10 @@ public class FirestationService {
                             medicalRecord.getMedications(),
                             medicalRecord.getAllergies()
                     ));
-                } else {
-                    System.out.println("No MedicalRecord found for: " + person.getFirstName() + " " + person.getLastName());
                 }
             }
         }
 
-        // Créer et retourner l'objet FirestationDTO avec les nouvelles valeurs
         return new FirestationDTO(
                 addresses.isEmpty() ? null : String.join(", ", addresses),
                 stationNumber,
@@ -145,90 +140,96 @@ public class FirestationService {
         );
     }
 
-
-
     public FirestationDTO getFireDetails(String address) {
-        List<Person> peopleAtAddress = data.getPersons().stream()
-                .filter(person -> person.getAddress().equalsIgnoreCase(address))
-                .collect(Collectors.toList());
+        List<Firestation> firestations = firestationRepository.findByAddress(Collections.singletonList(address));
+        if (!firestations.isEmpty()) {
+            Firestation firestation = firestations.get(0);  // Get the first firestation if available
+            List<Person> peopleAtAddress = personRepositoryImpl.findByAddress(List.of(address));
 
-        Firestation firestation = data.getFirestations().stream()
-                .filter(fs -> fs.getAddress().equalsIgnoreCase(address))
-                .findFirst()
-                .orElse(null);
-
-        if (firestation == null || peopleAtAddress.isEmpty()) {
-            return null;
-        }
-
-        List<FirestationDTO.ResidentInfo> residents = new ArrayList<>();
-        long numberOfChildren = 0;
-        long numberOfAdults = 0;
-
-        // Parcours des personnes à l'adresse pour calculer les enfants et adultes
-        for (Person person : peopleAtAddress) {
-            MedicalRecord medicalRecord = data.getMedicalrecords().stream()
-                    .filter(record -> record.getFirstName().equalsIgnoreCase(person.getFirstName()) &&
-                            record.getLastName().equalsIgnoreCase(person.getLastName()))
-                    .findFirst()
-                    .orElse(null);
-
-            if (medicalRecord == null) {
-                continue;
+            System.out.println("Personnes à l'adresse : " + peopleAtAddress);
+            if (peopleAtAddress.isEmpty()) {
+                System.out.println("Aucune personne trouvée à l'adresse : " + address);
+                return null;
             }
 
-            int age = PersonService.calculateAge(medicalRecord.getBirthDate());
-            if (age <= 18) {
-                numberOfChildren++;
-            } else {
-                numberOfAdults++;
+            List<FirestationDTO.ResidentInfo> residents = new ArrayList<>();
+            long numberOfChildren = 0;
+            long numberOfAdults = 0;
+
+            for (Person person : peopleAtAddress) {
+                MedicalRecord medicalRecord = medicalRecordRepositoryImpl.findByFirstNameAndLastName(
+                                person.getFirstName(), person.getLastName()).stream()
+                        .findFirst()
+                        .orElse(null);
+
+                if (medicalRecord == null) {
+                    continue;
+                }
+
+                int age = PersonService.calculateAge(medicalRecord.getBirthDate());
+                if (age <= 18) {
+                    numberOfChildren++;
+                } else {
+                    numberOfAdults++;
+                }
+
+                residents.add(new FirestationDTO.ResidentInfo(
+                        person.getFirstName() + " " + person.getLastName(),
+                        person.getPhone(),
+                        age,
+                        medicalRecord.getMedications(),
+                        medicalRecord.getAllergies()
+                ));
             }
 
-            residents.add(new FirestationDTO.ResidentInfo(
-                    person.getFirstName() + " " + person.getLastName(),
-                    person.getPhone(),
-                    age,
-                    medicalRecord.getMedications(),
-                    medicalRecord.getAllergies()
-            ));
+            return new FirestationDTO(
+                    firestation.getAddress(),
+                    firestation.getStation(),
+                    numberOfAdults,
+                    numberOfChildren,
+                    residents
+            );
+        } else {
+            System.out.println("Aucune firestation trouvée pour l'adresse : " + address);
+            return null;  // Return null if no firestation is found
         }
-
-        // Créer et retourner l'objet FirestationDTO avec les compteurs d'adultes et d'enfants
-        return new FirestationDTO(
-                firestation.getAddress(),
-                firestation.getStation(),
-                numberOfAdults,
-                numberOfChildren,
-                residents
-        );
     }
 
 
-    private int calculateAge(LocalDate birthDate) {
-        return Period.between(birthDate, LocalDate.now()).getYears();
-    }
 
-    // Ajouter un nouveau mapping caserne/adresse
     public Firestation addFirestation(Firestation firestation) {
-        data.getFirestations().add(firestation);
+        firestationRepository.save(firestation);
         return firestation;
     }
 
-
-    // Mettre à jour le numéro de la caserne pour une adresse donnée
     public Firestation updateFirestation(String address, Integer newStation) {
-        return data.getFirestations().stream()
-                .filter(fs -> fs.getAddress().equalsIgnoreCase(address))
-                .findFirst()
-                .map(existingFirestation -> {
-                    existingFirestation.setStation(newStation);
-                    return existingFirestation;
-                }).orElse(null);
+        // Récupérer la liste des firestations correspondant à l'adresse
+        List<Firestation> firestations = firestationRepository.findByAddress(Collections.singletonList(address));
+
+        if (!firestations.isEmpty()) {
+            // Récupérer le premier élément de la liste
+            Firestation existingFirestation = firestations.get(0);
+            existingFirestation.setStation(newStation); // Mise à jour de la station
+            firestationRepository.save(existingFirestation); // Sauvegarde après mise à jour
+            return existingFirestation;
+        }
+        return null; // Retourne null si aucune firestation n'est trouvée
     }
 
-    // Supprimer un mapping caserne/adresse
+
+
     public boolean deleteFirestation(String address) {
-        return data.getFirestations().removeIf(fs -> fs.getAddress().equalsIgnoreCase(address));
+        // Récupérer la liste des firestations correspondant à l'adresse
+        List<Firestation> firestations = firestationRepository.findByAddress(Collections.singletonList(address));
+
+        if (!firestations.isEmpty()) {
+            Firestation firestation = firestations.get(0); // Récupérer le premier élément de la liste
+            firestationRepository.delete(firestation);    // Supprimer l'élément trouvé
+            return true;
+        }
+        return false; // Retourne false si aucune firestation n'est trouvée
     }
+
+
 
 }
