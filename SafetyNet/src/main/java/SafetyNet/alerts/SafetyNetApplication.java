@@ -6,7 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 
 @SpringBootApplication
-@EnanableSwagger2
+@EnableSwagger2
 public class SafetyNetApplication {
 
 	public static void main(String[] args) {
