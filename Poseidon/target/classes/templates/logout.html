@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+>
+<head>
+    <meta charset="UTF-8">
+    <title>Logout App</title>
+</head>
+<body>
+    <h1>Logout Page</h1>
+<h2>Are you sure you want to log out ?</h2>
+    <form th:action="@{/app-logout}" method="POST">
+        <input type="submit" value="Yes"/>
+    </form>
+    <form th:action="@{/}" method="POST">
+        <input type="submit" value="No"/>
+    </form>
+</body>
+</html>

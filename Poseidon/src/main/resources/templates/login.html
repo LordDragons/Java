@@ -1,0 +1,57 @@
+<html lang="en"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header text-center bg-primary text-white">
+                    <h3>Login</h3>
+                </div>
+                <div class="card-body">
+                    <div th:if="${param.error}" class="alert alert-danger text-center" role="alert">
+                        Invalid username or password. Please try again.
+                    </div>
+                    <div th:if="${param.logout}" class="alert alert-success text-center" role="alert">
+                        You have been logged out.
+                    </div>
+
+                    <form th:action="@{/login}" method="post">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username:</label>
+                            <input type="text" id="username" name="username" required class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password:</label>
+                            <input type="password" id="password" name="password" required class="form-control">
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-block">Login</button>
+                        </div>
+                    </form>
+                    <div class="text-center mt-3">
+                        <p>Or log in with:</p>
+                        <a th:href="@{/oauth2/authorization/github}" class="btn btn-dark">Login with GitHub</a>
+                        <a th:href="@{/oauth2/authorization/google}" class="btn btn-dark">Login with Google</a>
+                    </div>
+                </div>
+                <div class="card-footer text-center">
+                    <p>
+                        <a href="/" class="text-decoration-none">Home</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script th:src="@{/static.js/bootstrap.bundle.min.js}"></script>
+</body>
+</html>

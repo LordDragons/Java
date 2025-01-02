@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html
+        xmlns="http://www.w3.org/1999/xhtml"
+        xmlns:th="http://www.thymeleaf.org"
+        xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+ lang="en">
+<head>
+    <title> Spring Boot </title>
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
+    <div class="container text-center">
+        <a class="navbar-brand mx-auto" href="#">Poseidon App</a>
+        <div class="collapse navbar-collapse justify-content-end" sec:authorize="isAuthenticated()">
+            <span class="navbar-text me-3">
+                Logged in user:
+
+                <b th:if="${name} != null" th:text="${name}"></b>
+            </span>
+            <form th:action="@{/app-logout}" method="POST" class="d-inline">
+                <button type="submit" class="btn btn-outline-danger btn-sm">Logout</button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <div sec:authorize="isAuthenticated()">
+        <div class="alert alert-success text-center">
+            <h4>Welcome Back!</h4>
+            <p>Welcome, authenticated user!</p>
+        </div>
+        <!-- Admin Section -->
+        <div sec:authorize="hasRole('ROLE_ADMIN')" class="mb-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5>Admin Panel</h5>
+                </div>
+                <div class="card-body">
+                    <p>Manage administrative tasks in the panel below:</p>
+                    <a href="/user/list" class="btn btn-primary">User Management</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Dashboard -->
+        <div sec:authorize="hasRole('ROLE_USER')" class="mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5>User Dashboard</h5>
+                </div>
+                <div class="card-body">
+                    <p>Welcome to your dashboard. Explore the options provided for your account.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Prompt -->
+    <div sec:authorize="!isAuthenticated()">
+        <div class="alert alert-warning text-center" style="background-color: #d435dc70;">
+            <p class="mb-3">You need to log in to access this page.</p>
+            <a href="/login" class="btn btn-primary">Login</a>
+        </div>
+    </div>
+
+
+    <!-- BidList Link -->
+    <div class="text-center mt-4">
+        <a href="/bidList/list" class="btn btn-secondary">Go to Bid_List</a>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer class="text-center mt-4">
+    <p>&copy; 2023 Spring Boot Application</p>
+</footer>
+</body>
+</html>
