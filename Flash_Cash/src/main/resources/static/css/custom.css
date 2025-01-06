@@ -1,0 +1,95 @@
+:root {
+    --bs-primary: gold;
+}
+
+.bg-primary {
+    background-color: var(--bs-primary) !important;
+    border-color: var(--bs-primary) !important;
+}
+
+.text-primary {
+    color: var(--bs-primary) !important;
+}
+
+.btn-primary {
+    background-color: var(--bs-primary) !important;
+    border-color: var(--bs-primary) !important;
+}
+
+.custom-navbar {
+    height: 10vw;
+    display: flex;
+    align-items: center;
+}
+
+.custom-navbar .navbar-brand,
+.custom-navbar .nav-link {
+    line-height: 1;
+}
+
+.container {
+    height: 10vw;
+}
+
+.navbar-brand {
+    height: 5vw;
+    display: flex;
+    align-items: center;
+    font-size: 3vw;
+}
+
+.collapse .navbar-collapse {
+    height: 7vw;
+}
+
+.navbar-nav.ms-auto {
+    height: 4vw;
+    display: flex;
+    align-items: center;
+    font-size: 2vw;
+}
+
+.fas.fa-wallet.me-2 {
+    color: black;
+}
+
+.py-4 {
+    padding-top: 2.5rem!important;
+}
+
+/* Appliquer la police Orbitron et les styles futuristes au texte Flash Cash */
+.navbar-brand {
+    height: 5vw;
+    display: flex;
+    align-items: center;
+    font-size: 3vw;
+    font-family: 'Orbitron', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 5px;
+    color: white;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.7), 0 0 20px rgba(255, 255, 255, 0.6), 0 0 30px rgba(255, 255, 255, 0.5);
+    animation: rapidMove 1s linear infinite;
+}
+
+/* Animation rapide du texte */
+@keyframes rapidMove {
+    0% {
+        transform: translateX(-50px);
+    }
+    50% {
+        transform: translateX(10px);
+    }
+    100% {
+        transform: translateX(-50px);
+    }
+}
+
+/* Effet de survol avec lumière */
+.navbar-brand:hover {
+    color: var(--bs-primary);
+    text-shadow: 0 0 15px var(--bs-primary), 0 0 30px var(--bs-primary), 0 0 45px var(--bs-primary);
+}
+
+.me-2 {
+    margin-right: 0.5rem;
+}
