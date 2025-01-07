@@ -94,6 +94,6 @@ public class TransactionController {
         model.addAttribute("accounts", sessionService.sessionUser().getAccounts());
 
         // Retourner la page des comptes pour afficher le résultat
-        return "redirect:/";
+        return "redirect:/account/show";
     }
 }

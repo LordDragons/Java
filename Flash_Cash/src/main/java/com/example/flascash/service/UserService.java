@@ -5,14 +5,19 @@ import com.example.flascash.repositories.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
+
 import java.util.List;
-import java.util.Optional;
+import java.util.regex.Pattern;
 
 @Service
 public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+
+    // Regex pour valider l'email (format basique)
+    private static final String EMAIL_REGEX = "^[A-Za-z0-9+_.-]+@(.+)$";
+    private static final String STRONG_PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$";
+
 
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
@@ -22,6 +27,17 @@ public class UserService {
     public User registerUser(String email, String username, String password) {
         System.out.println("Registering user: email = " + email + ", username = " + username);
 
+        // Valider l'email avec regex
+        if (!Pattern.matches(EMAIL_REGEX, email)) {
+            throw new IllegalArgumentException("Invalid email format.");
+        }
+
+        // Valider le mot de passe avec regex
+        if (!Pattern.matches(STRONG_PASSWORD_REGEX, password)) {
+            throw new IllegalArgumentException("Password must contain at least one uppercase letter, one lowercase letter, one digit, and one special character.");
+        }
+
+        // Vérifier si l'email ou le nom d'utilisateur existe déjà
         if (userRepository.findByEmail(email).isPresent() || userRepository.findByUsername(username).isPresent()) {
             System.out.println("User already exists!");
             throw new IllegalArgumentException("Email or Username already exists");
