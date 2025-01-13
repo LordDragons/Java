@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction History</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/css/custom.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+    <div class="container">
+        <a class="navbar-brand" href="/"><i class="fas fa-wallet me-2"></i>Flash Cash</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/dashboard}">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/account/show}">Accounts</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" th:href="@{/transaction-history}">History</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Container for Content -->
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h1 class="card-title text-center mb-4">Transaction History</h1>
+
+                    <!-- Alert if no transactions -->
+                    <div th:if="${#lists.isEmpty(allTransactions)}"
+                         class="alert alert-warning d-flex align-items-center" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        No transactions found for this account.
+                    </div>
+
+                    <!-- Table displaying all transactions -->
+                    <div th:if="${!#lists.isEmpty(allTransactions)}">
+                        <table class="table table-striped">
+                            <thead>
+                            <tr>
+                                <th>Sender Account</th>
+                                <th>Receiver Account</th>
+                                <th>Amount</th>
+                                <th>Date</th>
+                                <th>Description</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="transaction : ${allTransactions}">
+                                <td th:text="${transaction.senderAccount.iban}"></td>
+                                <td th:text="${transaction.receiverAccount.iban}"></td>
+                                <td th:text="${#numbers.formatDecimal(transaction.amount, 1, 2)}"></td>
+                                <td th:text="${#temporals.format(transaction.date, 'dd/MM/yyyy HH:mm')}"></td>
+                                <td th:text="${transaction.description}"></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Bootstrap JS -->
+<script th:src="@{/js/bootstrap.bundle.min.js}"></script>
+</body>
+</html>

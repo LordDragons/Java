@@ -1,8 +1,11 @@
 package com.example.flascash.entities;
 
+import com.example.flascash.validator.ValidIban;
 import jakarta.persistence.*;
+import org.springframework.validation.annotation.Validated;
 
 @Entity
+@Validated
 public class Account {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -12,6 +15,8 @@ public class Account {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+
+    @ValidIban
     @Column(unique = true, nullable = false, length = 14)
     private String iban;
 

@@ -13,7 +13,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+
 
 @Controller
 @RequestMapping("/transactions")
@@ -30,6 +32,32 @@ public class TransactionController {
     @Autowired
     private SessionService sessionService;
 
+    @GetMapping("/transaction-history")
+    public String viewTransactionHistory(Model model) {
+        // Récupérer l'utilisateur connecté
+        User currentUser = sessionService.sessionUser();
+
+        // Récupérer les comptes de l'utilisateur
+        List<Account> userAccounts = currentUser.getAccounts();
+
+        // Récupérer toutes les transactions associées à ces comptes
+        List<Transaction> transactions = new ArrayList<>();
+        for (Account account : userAccounts) {
+            transactions.addAll(transactionService.getTransactionHistory(account));
+        }
+
+        // Supprimer les doublons en utilisant un Set ou un filtrage
+        List<Transaction> allTransactions = transactions.stream()
+                .distinct() // Évite les doublons
+                .toList();
+
+        // Ajouter les données au modèle
+        model.addAttribute("allTransactions", allTransactions);
+        model.addAttribute("user", currentUser);
+
+        return "transaction-history";
+    }
+
     @GetMapping(path = "/send/{friendId}")
     public String sendTransaction(@PathVariable Long friendId, Model model) {
         User friend = userService.findById(friendId);
@@ -39,6 +67,7 @@ public class TransactionController {
         model.addAttribute("userAccounts", userAccounts);
         model.addAttribute("transaction", new Transaction());
         return "send-transaction";
+
     }
 
     @PostMapping(path = "/send")
@@ -61,6 +90,7 @@ public class TransactionController {
 
         return "redirect:/";
     }
+
     //Pour le transfert entre compte d'une même personne
 
     @PostMapping("/transfer")
@@ -84,6 +114,16 @@ public class TransactionController {
                 // Effectuer le transfert
                 accountService.removeMoney(amount, source);
                 accountService.addMoney(amount, target);
+
+                // Ajouter la transaction de transfert
+                Transaction transaction = new Transaction();
+                transaction.setSenderAccount(source);
+                transaction.setReceiverAccount(target);
+                transaction.setAmount(amount);
+                transaction.setDate(LocalDateTime.now());
+                transaction.setDescription("Transfer between accounts");
+                transactionService.save(transaction);
+
                 model.addAttribute("transferSuccess", "Transfer completed successfully!");
             }
         } catch (Exception e) {
