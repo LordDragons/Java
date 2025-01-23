@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="GradleMigrationSettings" migrationVersion="1" />
+  <component name="GradleSettings">
+    <option name="linkedExternalProjectsSettings">
+      <GradleProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$/ms-guide" />
+        <option name="gradleJvm" value="openjdk-23" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/ms-guide" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$/ms-preference" />
+        <option name="gradleJvm" value="openjdk-23" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/ms-preference" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$/ms-rewards" />
+        <option name="gradleJvm" value="openjdk-23" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/ms-rewards" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$/ms-tracker" />
+        <option name="gradleJvm" value="openjdk-23" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/ms-tracker" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$/ms-user" />
+        <option name="gradleJvm" value="openjdk-23" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/ms-user" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+    </option>
+  </component>
+</project>

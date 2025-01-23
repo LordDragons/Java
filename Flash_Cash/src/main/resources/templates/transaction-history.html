@@ -59,6 +59,7 @@
                                 <th>Sender Account</th>
                                 <th>Receiver Account</th>
                                 <th>Amount</th>
+                                <th>Fee</th>
                                 <th>Date</th>
                                 <th>Description</th>
                             </tr>
@@ -68,6 +69,7 @@
                                 <td th:text="${transaction.senderAccount.iban}"></td>
                                 <td th:text="${transaction.receiverAccount.iban}"></td>
                                 <td th:text="${#numbers.formatDecimal(transaction.amount, 1, 2)}"></td>
+                                <td th:text="${transaction.fee}"></td>
                                 <td th:text="${#temporals.format(transaction.date, 'dd/MM/yyyy HH:mm')}"></td>
                                 <td th:text="${transaction.description}"></td>
                             </tr>
