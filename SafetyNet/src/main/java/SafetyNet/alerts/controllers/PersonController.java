@@ -82,7 +82,7 @@ public class PersonController {
         Optional<Person> updatedPerson = personService.updatePerson(personToUpdate);
 
         // Vérifier si la mise à jour a réussi
-        if (updatedPerson != null) {
+        if (updatedPerson.isPresent()) {
             return ResponseEntity.ok(updatedPerson);
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();

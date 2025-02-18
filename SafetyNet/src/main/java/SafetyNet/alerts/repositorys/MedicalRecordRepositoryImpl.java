@@ -16,10 +16,8 @@ import java.util.stream.Collectors;
 @Repository
 public class MedicalRecordRepositoryImpl implements MedicalRecordRepository {
 
-    private final Data data;
 
-    private void logMissingMedicalRecord(Person person) {
-    }
+    private final Data data;
 
     @Autowired
     public MedicalRecordRepositoryImpl(Data data) {
@@ -28,9 +26,10 @@ public class MedicalRecordRepositoryImpl implements MedicalRecordRepository {
 
     @Override
     public List<MedicalRecord> findAll() {
-        // Retourne tous les dossiers médicaux présents dans la base de données JSON
+//        System.out.println("📌 Liste des dossiers médicaux : " + data.getMedicalrecords());
         return data.getMedicalrecords();
     }
+
 
     @Override
     public List<MedicalRecord> findByFirstNameAndLastName(String firstName, String lastName) {
@@ -39,6 +38,9 @@ public class MedicalRecordRepositoryImpl implements MedicalRecordRepository {
                 .filter(m -> m.getFirstName().equalsIgnoreCase(firstName))
                 .filter(m -> m.getLastName().equalsIgnoreCase(lastName))
                 .collect(Collectors.toList());
+    }
+
+    private void logMissingMedicalRecord(Person person) {
     }
 
 

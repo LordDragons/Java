@@ -9,6 +9,10 @@ import java.util.Objects;
 @Component
 public class Data {
 
+    public Data() {
+        System.out.println("✅ Data bean créé !");
+    }
+
     private List<Firestation> firestations = new ArrayList<>();
     private List<MedicalRecord> medicalrecords = new ArrayList<>();
     private List<Person> persons = new ArrayList<>();

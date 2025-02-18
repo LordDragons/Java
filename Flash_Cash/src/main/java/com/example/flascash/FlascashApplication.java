@@ -9,5 +9,4 @@ public class FlascashApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(FlascashApplication.class, args);
 	}
-
 }

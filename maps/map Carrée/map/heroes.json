@@ -1,0 +1,41 @@
+  [ {
+    "classe" : "guerrier",
+    "race" : "humain",
+    "speed" : 4,
+    "color" : "rouge"
+  }, {
+    "classe" : "guerrier",
+    "race" : "nain",
+    "speed" : 3,
+    "color" : "violet"
+  }, {
+    "classe" : "magicien",
+    "race" : "elfe",
+    "speed" : 5,
+    "color" : "vert"
+  }, {
+    "classe" : "magicien",
+    "race" : "humain",
+    "speed" : 4,
+    "color" : "bleu"
+  }, {
+    "classe" : "archer",
+    "race" : "elfe",
+    "speed" : 5,
+    "color" : "jaune"
+  }, {
+    "classe" : "archer",
+    "race" : "humain",
+    "speed" : 4,
+    "color" : "turquoise"
+  }, {
+    "classe" : "guerrier",
+    "race" : "nain",
+    "speed" : 3,
+    "color" : "marron"
+  }, {
+      "classe" : "soigneur",
+      "race" : "humain",
+      "speed" : 4,
+      "color" : "rose"
+    }]

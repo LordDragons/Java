@@ -92,7 +92,7 @@ public class PersonTest {
         int age = person.calculateAge();
 
         // Assert
-        assertEquals(34, age); // Adjust this value based on the current year and birthdate.
+        assertEquals(35, age); // Adjust this value based on the current year and birthdate.
     }
 
     @Test

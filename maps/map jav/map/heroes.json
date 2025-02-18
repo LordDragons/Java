@@ -1,0 +1,51 @@
+[
+  {
+    "id": "guerrier_humain",
+    "race": "humain",
+    "type": "guerrier",
+    "speed": 5,
+    "color": "bleu"
+  },
+  {
+    "id": "guerrier_humain",
+    "race": "humain",
+    "type": "guerrier",
+    "speed": 4,
+    "color": "rouge"
+  },
+  {
+    "id": "guerrier_nain",
+    "race": "nain",
+    "type": "guerrier",
+    "speed": 3,
+    "color": "violet"
+  },
+  {
+    "id": "magicien_elfe",
+    "race": "elfe",
+    "type": "magicien",
+    "speed": 5,
+    "color": "vert"
+  },
+  {
+    "id": "archer_elfe",
+    "race": "elfe",
+    "type": "archer",
+    "speed": 5,
+    "color": "vert"
+  },
+  {
+    "id": "soigneur_elfe",
+    "race": "elfe",
+    "type": "soigneur",
+    "speed": 5,
+    "color": "turquoise"
+  },
+  {
+    "id": "soigneur_elfe",
+    "race": "elfe",
+    "type": "soigneur",
+    "speed": 5,
+    "color": "rose"
+  }
+]

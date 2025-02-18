@@ -1,0 +1,67 @@
+    <!DOCTYPE html>
+    <html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <title>Carte Carrée avec Héros et Obstacles</title>
+        <link rel="stylesheet" href="/static.css/map.css">
+    </head>
+    <body>
+    <div id="dashboard">
+        <h2>Tableau de bord</h2>
+        <!-- Menu Burger -->
+        <div class="burger-menu">
+            <button class="burger-icon" onclick="toggleMenu()">☰</button>
+            <div id="menu" class="menu">
+                <label for="rows">Nombre de lignes :</label>
+                <input type="number" id="rows" value="16" min="1" max="50">
+
+                <label for="cols">Nombre de colonnes :</label>
+                <input type="number" id="cols" value="24" min="1" max="50">
+
+                <label for="squareSize">Taille des cases (px) :</label>
+                <input type="number" id="squareSize" value="50" min="10" max="100">
+
+                <button id="applyChanges">Appliquer les changements</button>
+                <button id="toggleEditMode">Activer le mode édition</button>
+                <label for="elementType">Type d'obstacle :</label>
+                <select id="elementType">
+                    <option value="empty"></option>
+                    <option value="water">Eau</option>
+                    <option value="rock">Roche</option>
+                    <option value="bush">Buisson</option>
+                    <option value="forest">Forêt</option>
+                    <option value="sand">Sable</option>
+                    <option value="building">Bâtiment</option>
+                    <option value="bridge">Pont</option>
+                    <option value="swamp">Marécage</option>
+                </select>
+                <label for="enemyType">Type d'ennemi :</label>
+                <select id="enemyType">
+                    <option value=""></option>
+                    <option value="archer">Archer</option>
+                    <option value="guerrier">Guerrier</option>
+                    <option value="magicien">Magicien</option>
+                    <option value="soigneur">Soigneur</option>
+                </select>
+                <button id="togglePlacementModeButton">Placement des héros</button>
+                <label for="heroSelect">Liste des Héros :</label>
+                <select id="heroSelect">
+                    <option value="">Sélectionner un héros</option>
+                    <!-- Les héros seront ajoutés dynamiquement -->
+                </select>
+            </div>
+        </div>
+        <h3>Légende des obstacles</h3>
+        <ul id="legend">
+            <!-- La légende sera ajoutée ici dynamiquement -->
+        </ul>
+        <button id="resetSpeeds">Réinitialiser les vitesses</button>
+    </div>
+    <div id="canvasContainer">
+    <canvas id="squareMap" width="1200" height="800"></canvas>
+    </div>
+    <script  src="/static.js/map.js"></script>
+    </body>
+    </html>

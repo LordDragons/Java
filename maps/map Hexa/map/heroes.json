@@ -1,0 +1,20 @@
+[
+  {
+    "classe": "guerrier",
+    "race": "humain",
+    "speed": 4,
+    "color": "rouge"
+  },
+  {
+    "classe": "guerrier",
+    "race": "nain",
+    "speed": 3,
+    "color": "violet"
+  },
+  {
+    "classe": "magicien",
+    "race": "elfe",
+    "speed": 5,
+    "color": "vert"
+  }
+]

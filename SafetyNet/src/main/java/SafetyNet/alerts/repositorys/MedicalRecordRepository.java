@@ -7,6 +7,7 @@ import SafetyNet.alerts.models.Person;
 import java.util.Collection;
 import java.util.List;
 
+
 public interface MedicalRecordRepository {
 
     // Récupère tous les dossiers médicaux

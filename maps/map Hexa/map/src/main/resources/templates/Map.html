@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carte Hexagonale avec Héros</title>
+    <style>
+        canvas {
+            border: 1px solid #000;
+        }
+    </style>
+</head>
+<body>
+<canvas id="hexMap" width="1200" height="800"></canvas>
+<script>
+    const canvas = document.getElementById('hexMap');
+    const ctx = canvas.getContext('2d');
+
+    const hexSize = 40; // Taille d'un côté de l'hexagone
+    const rows = 12; // Nombre de lignes
+    const cols = 16; // Nombre de colonnes
+    let scale = 1; // Facteur de zoom
+    let heroes = []; // Tableau pour stocker plusieurs héros
+    let selectedHero = null; // Héros sélectionné
+
+    // Fonction pour dessiner un hexagone
+    function drawHex(x, y, size, color = '#d3d3d3') {
+        const angle = Math.PI / 3; // 60 degrés
+        ctx.beginPath();
+        for (let i = 0; i < 6; i++) {
+            const dx = x + size * Math.cos(i * angle);
+            const dy = y + size * Math.sin(i * angle);
+            if (i === 0) ctx.moveTo(dx, dy);
+            else ctx.lineTo(dx, dy);
+        }
+        ctx.closePath();
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.strokeStyle = '#000';
+        ctx.stroke();
+    }
+
+    // Fonction pour dessiner une grille hexagonale
+    function drawGrid() {
+        const hexHeight = Math.sqrt(3) * hexSize * scale;
+        const hexWidth = 2 * hexSize * scale;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        for (let row = 0; row < rows; row++) {
+            for (let col = 0; col < cols; col++) {
+                const x = col * (hexWidth * 0.75);
+                const y = row * hexHeight + (col % 2 === 0 ? 0 : hexHeight / 2);
+                drawHex(x + hexSize * scale, y + hexSize * scale, hexSize * scale);
+            }
+        }
+
+        drawHeroes(); // Dessiner tous les héros après la grille
+    }
+
+    // Fonction pour dessiner tous les héros sur la carte
+    function drawHeroes() {
+        heroes.forEach(hero => {
+            const hexHeight = Math.sqrt(3) * hexSize * scale;
+            const hexWidth = 2 * hexSize * scale;
+
+            // Calculer les coordonnées du héros
+            const x = hero.col * (hexWidth * 0.75) + hexSize * scale;
+            const y = hero.row * hexHeight + (hero.col % 2 === 0 ? 0 : hexHeight / 2) + hexSize * scale;
+
+            // Si le héros est sélectionné, changer la couleur ou ajouter un contour
+            const highlightColor = hero === selectedHero ? 'gold' : hero.color;
+
+            // Dessiner le héros (cercle coloré)
+            ctx.beginPath();
+            ctx.arc(x, y, hexSize * 0.4 * scale, 0, 2 * Math.PI);
+            ctx.fillStyle = highlightColor;
+            ctx.fill();
+            ctx.strokeStyle = '#000';
+            ctx.stroke();
+        });
+    }
+
+    // Dictionnaire de conversion des couleurs françaises en couleurs CSS
+    const colorMap = {
+        "rouge": "red",
+        "vert": "green",
+        "bleu": "blue",
+        "jaune": "yellow",
+        "noir": "black",
+        "blanc": "white",
+        "gris": "gray",
+        "orange": "orange",
+        "violet": "purple",
+        "rose": "pink",
+        "marron": "brown",
+        "turquoise": "turquoise"
+        // Ajoutez d'autres couleurs ici selon votre besoin
+    };
+
+    async function loadHeroes() {
+        try {
+            const response = await fetch('/heroes.json'); // Charger le fichier JSON
+            if (!response.ok) throw new Error('Erreur lors du chargement des données des héros.');
+
+            const data = await response.json();
+
+            // Vérifier si la propriété color est bien définie dans le JSON
+            heroes = data.map((heroData, index) => {
+                const frenchColor = heroData.color || 'gris'; // Si aucune couleur n'est définie, utiliser 'gris' par défaut
+                const color = colorMap[frenchColor] || 'gray'; // Convertir la couleur en anglais (par défaut 'gray' si inconnu)
+
+                return {
+                    row: Math.floor(index / cols), // Distribution des héros sur les lignes
+                    col: index % cols, // Distribution des héros sur les colonnes
+                    color: color, // Utiliser la couleur convertie
+                    speed: heroData.speed, // Vitesse
+                };
+            });
+
+            drawGrid(); // Redessiner la carte avec les héros
+        } catch (error) {
+            console.error('Erreur :', error.message);
+        }
+    }
+
+    // Gestion du zoom avec la molette de la souris
+    canvas.addEventListener('wheel', (event) => {
+        event.preventDefault();
+
+        const zoomFactor = 0.1;
+        if (event.deltaY < 0) {
+            scale += zoomFactor; // Zoom avant
+        } else if (event.deltaY > 0) {
+            scale = Math.max(0.5, scale - zoomFactor); // Zoom arrière
+        }
+
+        drawGrid(); // Redessiner la grille après un zoom
+    });
+
+    // Fonction pour déterminer les directions des voisins d'un hexagone
+    function getNeighborDirections(col) {
+        if (col % 2 === 0) {
+            return [
+                [-1, 0], // Haut
+                [1, 0],  // Bas
+                [-1, -1], // Haut-Gauche
+                [-1, 1], // Haut-Droite
+                [0, -1], // Bas-Gauche
+                [0, 1]  // Bas-Droite
+            ];
+        } else {
+            return [
+                [-1, 0], // Haut
+                [1, 0],  // Bas
+                [0, -1], // Haut-Gauche
+                [0, 1],  // Haut-Droite
+                [1, -1], // Bas-Gauche
+                [1, 1]  // Bas-Droite
+            ];
+        }
+    }
+
+    // Fonction pour vérifier si une case est voisine et libre
+    function isNeighbor(hero, targetRow, targetCol) {
+        const directions = getNeighborDirections(hero.col);
+
+        // Vérifier si la case cible est voisine
+        const isNeighborCase = directions.some(([dr, dc]) => {
+            const neighborRow = hero.row + dr;
+            const neighborCol = hero.col + dc;
+            return neighborRow === targetRow && neighborCol === targetCol;
+        });
+
+        // Vérifier si la case est libre (non occupée par un autre héros)
+        const isOccupied = heroes.some(otherHero => otherHero.row === targetRow && otherHero.col === targetCol);
+
+        return isNeighborCase && !isOccupied; // La case doit être voisine et libre
+    }
+
+    function resetHeroesSpeed() {
+        heroes.forEach(hero => {
+            // Remettre la vitesse à sa valeur d'origine (par exemple, 3)
+            hero.speed = 3;
+        });
+        console.log('Les vitesses des héros ont été réinitialisées.');
+    }
+
+    // Fonction pour vérifier si tous les héros ont épuisé leur vitesse
+    function allHeroesMoved() {
+        return heroes.every(hero => hero.speed === 0); // Retourne true si tous les héros ont une vitesse de 0
+    }
+
+    // Fonction pour gérer les déplacements des héros
+    function moveHero(hero, targetRow, targetCol) {
+        // Vérifier si le héros peut se déplacer (si la vitesse est suffisante)
+        if (hero.speed > 0) {
+            // Vérifier si la case cible est voisine et libre
+            if (isNeighbor(hero, targetRow, targetCol)) {
+                // Déplacer le héros
+                hero.row = targetRow;
+                hero.col = targetCol;
+                hero.speed -= 1; // Réduire la vitesse après un déplacement
+                console.log('Déplacement effectué:', hero);
+                drawGrid(); // Redessiner la grille
+            } else {
+                console.log('Déplacement impossible, case occupée ou non voisine');
+            }
+        } else {
+            console.log('Le héros ne peut plus se déplacer, vitesse épuisée');
+        }
+    }
+
+    // Vérifier si tous les héros ont bougé
+    if (allHeroesMoved()) {
+        // Tous les héros ont bougé, réinitialiser la vitesse et redémarrer le cycle
+        resetHeroesSpeed();
+        drawGrid(); // Redessiner la grille avec les vitesses réinitialisées
+    }
+
+
+    // Gestionnaire de clic pour sélectionner un héros ou déplacer un héros sélectionné
+    canvas.addEventListener('click', (event) => {
+        const x = event.offsetX;
+        const y = event.offsetY;
+
+        const hexHeight = Math.sqrt(3) * hexSize * scale;
+        const hexWidth = 2 * hexSize * scale;
+
+        // Calcul de la colonne cible (approximative)
+        const colApprox = Math.floor(x / (hexWidth * 0.75));
+        const rowOffset = colApprox % 2 === 0 ? 0 : hexHeight / 2; // Décalage selon la colonne
+        const rowApprox = Math.floor((y - rowOffset) / hexHeight);
+
+        // Vérification de clic sur un héros
+        const clickedHero = heroes.find(hero => {
+            const heroX = hero.col * (hexWidth * 0.75) + hexSize * scale;
+            const heroY = hero.row * hexHeight + (hero.col % 2 === 0 ? 0 : hexHeight / 2) + hexSize * scale;
+            const distance = Math.sqrt(Math.pow(heroX - x, 2) + Math.pow(heroY - y, 2));
+            return distance < hexSize * 0.4 * scale;
+        });
+
+        if (clickedHero) {
+            // Sélectionner un héros
+            selectedHero = clickedHero;
+            console.log('Héros sélectionné:', selectedHero);
+        } else if (selectedHero) {
+            // Déplacer le héros si la case cible est voisine et libre
+            moveHero(selectedHero, rowApprox, colApprox);
+        }
+    });
+
+    // Charger les données des héros au démarrage
+    loadHeroes();
+</script>
+</body>
+</html>

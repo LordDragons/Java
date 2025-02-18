@@ -32,6 +32,7 @@ public class HomeController {
         return "home";
     }
 
+
     @GetMapping(path = "/dashboard")
     public String dashboard(Model model) {
         User user = sessionService.sessionUser();
